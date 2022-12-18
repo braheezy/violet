@@ -30,6 +30,8 @@ func NewVagrantClient() (*VagrantClient, error) {
 	}, nil
 }
 
+// Get the version of Vagrant.
+// NB: Good way to check things are working
 func (c *VagrantClient) GetVersion() (string, error) {
 	cmd := exec.Command(c.ExecPath, "--version")
 	result, err := cmd.CombinedOutput()
@@ -66,43 +68,46 @@ func (c *VagrantClient) RunCommand(command string) (string, error) {
 	return string(output), nil
 }
 
-// Result represents the result of a Vagrant command for a single VM.
-type VagrantOutputResult struct {
-	// Name is the name of the VM.
+// Represents the result of a Vagrant command under the context of a single VM.
+type MachineInfo struct {
+	// Name is the name of the machine.
 	Name string
 	// Fields is a map of field names to field values.
 	Fields map[string]string
 }
 
-// Parse parses the output from a Vagrant command and returns the result.
-func ParseVagrantOutput(output string) []VagrantOutputResult {
+// Generically parses the output from a Vagrant command and returns the result.
+// Multi-machine environments may result in a list of Result objects
+func ParseVagrantOutput(output string) []MachineInfo {
 	// Compile regular expressions for each field.
 	fields := make(map[string]*regexp.Regexp)
-	supportedFields := []string{"metadata", "provider-name", "state", "state-human-long"}
+	supportedFields := []string{"metadata", "machine-id", "provider-name", "state", "state-human-long", "machine-home"}
 	for _, field := range supportedFields {
-		fields[field] = regexp.MustCompile(`^\d+,(\S+),` + field + `,(.+)$`)
+		fields[field] = regexp.MustCompile(`^\s*\d+,(.*),` + field + `,(.+)$`)
 	}
-	var results []VagrantOutputResult
-	var result VagrantOutputResult
+	var results []MachineInfo
+	var result MachineInfo
 	for _, line := range strings.Split(output, "\n") {
 		// Check if the line matches any of the fields.
 		matched := false
 		for field, re := range fields {
 			if m := re.FindStringSubmatch(line); m != nil {
+				// metadata lines de-lineate VMs and are a good place to grab the name.
 				if field == "metadata" {
 					// Save name if it's the first we've seen
 					if result.Name == "" {
 						result.Name = m[1]
 						result.Fields = make(map[string]string)
 					} else if result.Name != m[1] {
-						// New VM found. Create new Result object
+						// New VM found. Create new Result
 						results = append(results, result)
-						result = VagrantOutputResult{Name: m[1], Fields: make(map[string]string)}
+						result = MachineInfo{Name: m[1], Fields: make(map[string]string)}
 					}
 				} else {
 					// Update the result with the field value.
 					result.Fields[field] = m[2]
 				}
+				// Found a field for this line, move on to next line
 				matched = true
 				break
 			}
@@ -113,7 +118,7 @@ func ParseVagrantOutput(output string) []VagrantOutputResult {
 		}
 	}
 	// Add the last result
-	if result.Name != "" {
+	if result.Name != "" || len(result.Fields) != 0 {
 		results = append(results, result)
 	}
 	return results
