@@ -55,7 +55,7 @@ func TestParseVagrantOutput_Status(t *testing.T) {
 9,$spe_Cat4,state-human-short,running
 10,$spe_Cat4,state-human-long,`
 
-	expected := []vagrant.VagrantOutputResult{
+	expected := []vagrant.MachineInfo{
 		{
 			Name: "builder-f35",
 			Fields: map[string]string{
@@ -73,6 +73,72 @@ func TestParseVagrantOutput_Status(t *testing.T) {
 		},
 	}
 	results := vagrant.ParseVagrantOutput(output)
+
+	assert.EqualValues(t, expected, results)
+
+	// Test error status
+	output = `1671329290,,ui,error,A Vagrant environment or target machine is required to run this\ncommand. Run 'vagrant init' to create a new Vagrant environment. Or%!(VAGRANT_COMMA)\nget an ID of a target machine from 'vagrant global-status' to run\nthis command on. A final option is to change to a directory with a\nVagrantfile and to try again.
+	1671329290,,error-exit,Vagrant::Errors::NoEnvironmentError,A Vagrant environment or target machine is required to run this\ncommand. Run 'vagrant init' to create a new Vagrant environment. Or%!(VAGRANT_COMMA)\nget an ID of a target machine from 'vagrant global-status' to run\nthis command on. A final option is to change to a directory with a\nVagrantfile and to try again.`
+
+	results = vagrant.ParseVagrantOutput(output)
+
+	assert.Nil(t, results)
+
+	// Test empty status
+	output = ``
+
+	results = vagrant.ParseVagrantOutput(output)
+
+	assert.Nil(t, results)
+
+}
+
+func TestParseVagrantOutput_GlobalStatus(t *testing.T) {
+	output := `1,,metadata,machine-count,0
+2,,ui,info,id
+3,,ui,info,name
+4,,ui,info,provider
+4,,ui,info,state
+5,,ui,info,directory
+6,,ui,info,
+7,,ui,info,--------------------------------------------------------------------
+8,,ui,info,There are no active Vagrant environments on this computer! Or%!(VAGRANT_COMMA)\nyou haven't destroyed and recreated Vagrant environments that were\nstarted with an older version of Vagrant.`
+	results := vagrant.ParseVagrantOutput(output)
+
+	assert.Nil(t, results)
+
+	output = `1671330325,,metadata,machine-count,1
+1671330325,,machine-id,c03b277
+1671330325,,provider-name,libvirt
+1671330325,,machine-home,/home/braheezy/prettybox/runners
+1671330325,,state,shutoff
+1671330325,,ui,info,id
+1671330325,,ui,info,name
+1671330325,,ui,info,provider
+1671330325,,ui,info,state
+1671330325,,ui,info,directory
+1671330325,,ui,info,
+1671330325,,ui,info,--------------------------------------------------------------------------
+1671330325,,ui,info,c03b277
+1671330325,,ui,info,builder-f35
+1671330325,,ui,info,libvirt
+1671330325,,ui,info,shutoff
+1671330325,,ui,info,/home/braheezy/prettybox/runners
+1671330325,,ui,info,
+1671330325,,ui,info, \nThe above shows information about all known Vagrant environments\non this machine. This data is cached and may not be completely\nup-to-date (use "vagrant global-status --prune" to prune invalid\nentries). To interact with any of the machines%!(VAGRANT_COMMA) you can go to that\ndirectory and run Vagrant%!(VAGRANT_COMMA) or you can use the ID directly with\nVagrant commands from any directory. For example:\n"vagrant destroy 1a2b3c4d"`
+
+	expected := []vagrant.MachineInfo{
+		{
+			Name: "",
+			Fields: map[string]string{
+				"provider-name": "libvirt",
+				"state":         "shutoff",
+				"machine-home":  "/home/braheezy/prettybox/runners",
+				"machine-id":    "c03b277",
+			},
+		},
+	}
+	results = vagrant.ParseVagrantOutput(output)
 
 	assert.EqualValues(t, expected, results)
 }
