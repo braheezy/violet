@@ -24,6 +24,7 @@ export help_text
 help:
 	@echo "$$help_text"
 
+# Run local goreleaser build
 build:
 	@goreleaser build --snapshot --rm-dist
 	@echo -e "${GREEN}Build is complete!${END}"
@@ -36,6 +37,7 @@ test:
 	@echo -e "${ORANGE}Testing...${END}"
 	@go test $(PWD)/test/...
 
+# Select the right binary for the current host
 ifeq ($(OS)),Windows_NT)
 BIN = $(WINDOWS_BIN)
 else
