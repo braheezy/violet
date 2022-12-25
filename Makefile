@@ -34,9 +34,10 @@ clean:
 	@echo -e "${ORANGE}Cleaning...${END}"
 	@rm -rf $(BUILD_DIR)
 
+TEST_FILES = ./internal/app/ ./pkg/vagrant/
 test:
 	@echo -e "${ORANGE}Testing...${END}"
-	@go test $(PWD)/test/...
+	@go test $(TEST_FILES)
 
 # Select the right binary for the current host
 ifeq ($(OS)),Windows_NT)
