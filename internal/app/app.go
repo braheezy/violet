@@ -29,10 +29,9 @@ func initGlobalStatus() tea.Msg {
 		},
 	}
 
-	// environments := make(Environment, len(results))
 	// Create the VM struct
 	VMs := make([]VM, len(results))
-	for _, machineInfo := range results {
+	for i, machineInfo := range results {
 		name := machineInfo.Name
 		if name == "" {
 			name = machineInfo.Fields["machine-id"]
@@ -43,7 +42,7 @@ func initGlobalStatus() tea.Msg {
 			state:    machineInfo.Fields["state"],
 			home:     machineInfo.Fields["machine-home"],
 		}
-		VMs = append(VMs, vm)
+		VMs[i] = vm
 	}
 	envGroups := make(map[string][]VM)
 	for _, vm := range VMs {
@@ -51,12 +50,14 @@ func initGlobalStatus() tea.Msg {
 	}
 
 	environments := make([]Environment, len(envGroups))
+	i := 0
 	for envName, vms := range envGroups {
 		env := Environment{
 			name: envName,
 			VMs:  vms,
 		}
-		environments = append(environments, env)
+		environments[i] = env
+		i += 1
 	}
 
 	return globalStatusMsg{
