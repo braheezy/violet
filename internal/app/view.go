@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"math/rand"
 	"strings"
 
@@ -24,8 +25,15 @@ func (v Violet) View() string {
 
 	// Show the current environments
 	envArea := "Environments:\n"
-	envArea += "\t[env1] [env2] [env3]"
-	view += envArea
+	envArea += "\t"
+	for _, env := range v.dashboard.environments {
+		envArea += fmt.Sprintf("[%v]", env.name)
+	}
+	if v.state == environmentView {
+		view += focusedStyle.Render(envArea)
+	} else {
+		view += envArea
+	}
 	view += "\n\n"
 
 	// Show VMs for the selected environment
@@ -33,14 +41,22 @@ func (v Violet) View() string {
 	vmArea += "\t[ ] vm1 (provider: virtualbox, state: running)\n"
 	vmArea += "\t[x] vm2 (provider: vmware,     state: not created)\n"
 	vmArea += "\t[ ] vm3 (provider: virtualbox, state: running)\n"
-	view += vmArea
+	if v.state == vmView {
+		view += focusedStyle.Render(vmArea)
+	} else {
+		view += vmArea
+	}
 	view += "\n\n"
 
 	// The available commands to run on selected VM
-	commandView := "Commands:\n"
+	commandArea := "Commands:\n"
 	supportedCommands := []string{"up", "halt", "provision"}
-	commandView += strings.Join(supportedCommands, "\t")
-	view += commandView
+	commandArea += strings.Join(supportedCommands, "\t")
+	if v.state == commandView {
+		view += focusedStyle.Render(commandArea)
+	} else {
+		view += commandArea
+	}
 	view += "\n\n"
 
 	// Area to view output from Vagrant commands
