@@ -15,6 +15,7 @@ define help_text
 Targets:
   - make build          Build Violet for all targets (Linux, Windows, Mac, 64-bit)
   - make run            Build and run Violet for current host
+  - make debug          Run a dlv debug headless session
   - make test           Run all Go tests
   - make clean          Delete built artifacts
   - make [help]         Print this help.
@@ -54,3 +55,6 @@ $(BIN): build
 
 run: $(BIN)
 	@exec $?
+
+debug:
+	@dlv debug --listen ":2345" --headless ./cmd/violet/
