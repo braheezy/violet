@@ -1,9 +1,7 @@
-package vagrant_test
+package vagrant
 
 import (
 	"testing"
-
-	"github.com/braheezy/violet/pkg/vagrant"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -11,7 +9,7 @@ import (
 // Confirm the Vagrant Client can connect be successfully created
 func TestNewVagrantClient(t *testing.T) {
 	// Test client when binary is available and accessible
-	client, err := vagrant.NewVagrantClient()
+	client, err := NewVagrantClient()
 	assert.NoError(t, err)
 	assert.NotNil(t, client)
 	// Confirm the client can run
@@ -28,7 +26,7 @@ func TestNewVagrantClient(t *testing.T) {
 }
 
 func TestRunCommand_Basic(t *testing.T) {
-	client, _ := vagrant.NewVagrantClient()
+	client, _ := NewVagrantClient()
 
 	// Verify a valid Vagrant command
 	output := make(chan string)
@@ -68,7 +66,7 @@ func TestParseVagrantOutput_Status(t *testing.T) {
 9,$spe_Cat4,state-human-short,running
 10,$spe_Cat4,state-human-long,`
 
-	expected := []vagrant.MachineInfo{
+	expected := []MachineInfo{
 		{
 			Name: "builder-f35",
 			Fields: map[string]string{
@@ -85,7 +83,7 @@ func TestParseVagrantOutput_Status(t *testing.T) {
 			},
 		},
 	}
-	results := vagrant.ParseVagrantOutput(output)
+	results := ParseVagrantOutput(output)
 
 	assert.EqualValues(t, expected, results)
 
@@ -93,14 +91,14 @@ func TestParseVagrantOutput_Status(t *testing.T) {
 	output = `1671329290,,ui,error,A Vagrant environment or target machine is required to run this\ncommand. Run 'vagrant init' to create a new Vagrant environment. Or%!(VAGRANT_COMMA)\nget an ID of a target machine from 'vagrant global-status' to run\nthis command on. A final option is to change to a directory with a\nVagrantfile and to try again.
 	1671329290,,error-exit,Vagrant::Errors::NoEnvironmentError,A Vagrant environment or target machine is required to run this\ncommand. Run 'vagrant init' to create a new Vagrant environment. Or%!(VAGRANT_COMMA)\nget an ID of a target machine from 'vagrant global-status' to run\nthis command on. A final option is to change to a directory with a\nVagrantfile and to try again.`
 
-	results = vagrant.ParseVagrantOutput(output)
+	results = ParseVagrantOutput(output)
 
 	assert.Nil(t, results)
 
 	// Test empty status
 	output = ``
 
-	results = vagrant.ParseVagrantOutput(output)
+	results = ParseVagrantOutput(output)
 
 	assert.Nil(t, results)
 
@@ -116,7 +114,7 @@ func TestParseVagrantOutput_GlobalStatus(t *testing.T) {
 6,,ui,info,
 7,,ui,info,--------------------------------------------------------------------
 8,,ui,info,There are no active Vagrant environments on this computer! Or%!(VAGRANT_COMMA)\nyou haven't destroyed and recreated Vagrant environments that were\nstarted with an older version of Vagrant.`
-	results := vagrant.ParseVagrantOutput(output)
+	results := ParseVagrantOutput(output)
 
 	assert.Nil(t, results)
 
@@ -140,7 +138,7 @@ func TestParseVagrantOutput_GlobalStatus(t *testing.T) {
 1671330325,,ui,info,
 1671330325,,ui,info, \nThe above shows information about all known Vagrant environments\non this machine. This data is cached and may not be completely\nup-to-date (use "vagrant global-status --prune" to prune invalid\nentries). To interact with any of the machines%!(VAGRANT_COMMA) you can go to that\ndirectory and run Vagrant%!(VAGRANT_COMMA) or you can use the ID directly with\nVagrant commands from any directory. For example:\n"vagrant destroy 1a2b3c4d"`
 
-	expected := []vagrant.MachineInfo{
+	expected := []MachineInfo{
 		{
 			Name: "",
 			Fields: map[string]string{
@@ -151,7 +149,7 @@ func TestParseVagrantOutput_GlobalStatus(t *testing.T) {
 			},
 		},
 	}
-	results = vagrant.ParseVagrantOutput(output)
+	results = ParseVagrantOutput(output)
 
 	assert.EqualValues(t, expected, results)
 }
