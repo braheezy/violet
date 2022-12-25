@@ -1,8 +1,11 @@
+// Package vagrant provides
 package vagrant
 
 import (
+	"bufio"
 	"errors"
-	"fmt"
+	"io"
+	"log"
 	"os"
 	"os/exec"
 	"regexp"
@@ -53,19 +56,41 @@ func (c *VagrantClient) GetVersion() (string, error) {
 }
 
 // Runs a Vagrant command and returns the result.
-func (c *VagrantClient) RunCommand(command string) (string, error) {
+func (c *VagrantClient) RunCommand(command string, outputCh chan<- string) error {
 	// Create the Vagrant command and capture its output
 	cmd := exec.Command(c.ExecPath, append(strings.Split(command, " "), "--machine-readable")...)
 	cmd.Env = c.Env
 
-	// Run command and get stdout/stderr
-	fmt.Print("Running command")
-	output, err := cmd.CombinedOutput()
+	// Create pipes for stdout and stderr
+	stdoutPipe, err := cmd.StdoutPipe()
 	if err != nil {
-		return "", err
+		return err
+	}
+	stderrPipe, err := cmd.StderrPipe()
+	if err != nil {
+		return err
 	}
 
-	return string(output), nil
+	log.Print("Running command", cmd)
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+	// Read pipes as command runs
+	scanner := bufio.NewScanner(io.MultiReader(stdoutPipe, stderrPipe))
+	go func() {
+		for scanner.Scan() {
+			line := scanner.Text()
+			// Send output back to caller via channel
+			outputCh <- line
+		}
+		close(outputCh)
+	}()
+
+	if err := cmd.Wait(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Represents the result of a Vagrant command under the context of a single VM.
@@ -81,6 +106,7 @@ type MachineInfo struct {
 func ParseVagrantOutput(output string) []MachineInfo {
 	// Compile regular expressions for each field.
 	fields := make(map[string]*regexp.Regexp)
+	// DEV: Add more fields here as needed.
 	supportedFields := []string{"metadata", "machine-id", "provider-name", "state", "state-human-long", "machine-home"}
 	for _, field := range supportedFields {
 		fields[field] = regexp.MustCompile(`^\s*\d+,(.*),` + field + `,(.+)$`)

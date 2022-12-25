@@ -3,7 +3,7 @@ package vagrant_test
 import (
 	"testing"
 
-	"violet/pkg/vagrant"
+	"github.com/braheezy/violet/pkg/vagrant"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -31,14 +31,27 @@ func TestRunCommand_Basic(t *testing.T) {
 	client, _ := vagrant.NewVagrantClient()
 
 	// Verify a valid Vagrant command
-	out, err := client.RunCommand("global-status")
-	assert.NoError(t, err)
-	assert.NotEmpty(t, out)
+	output := make(chan string)
+	go func() {
+		err := client.RunCommand("global-status", output)
+		assert.NoError(t, err)
+	}()
+	result := ""
+	for line := range output {
+		result += line + "\n"
+	}
+	assert.NotEmpty(t, result)
 
 	// Verify an invalid command
-	out, err = client.RunCommand("invalid-command")
-	assert.Error(t, err)
-	assert.Empty(t, out)
+	go func() {
+		err := client.RunCommand("invalid-command", output)
+		assert.Error(t, err)
+	}()
+	result = ""
+	for line := range output {
+		result += line + "\n"
+	}
+	assert.Empty(t, result)
 }
 
 func TestParseVagrantOutput_Status(t *testing.T) {
