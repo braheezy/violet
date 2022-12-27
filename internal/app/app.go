@@ -23,20 +23,21 @@ type ecosystemErrMsg struct{ err error }
 
 func (e ecosystemErrMsg) Error() string { return e.err.Error() }
 
-func getGlobalStatus(client vagrant.VagrantClient) tea.Cmd {
-	return func() tea.Msg {
-		output := make(chan string)
-		var err error
-		go func() {
-			err = client.RunCommand("global-status", output)
-		}()
-		if err != nil {
-			return ecosystemErrMsg{err}
-		}
-		result := readChanToString(output)
-		results := vagrant.ParseVagrantOutput(result)
-		return createEcosystem(results)
+func getGlobalStatus() tea.Msg {
+	client, err := vagrant.NewVagrantClient()
+	if err != nil {
+		log.Fatal(err)
 	}
+	output := make(chan string)
+	go func() {
+		err = client.RunCommand("global-status", output)
+	}()
+	if err != nil {
+		return ecosystemErrMsg{err}
+	}
+	result := readChanToString(output)
+	results := vagrant.ParseVagrantOutput(result)
+	return createEcosystem(results)
 }
 func createEcosystem(results []vagrant.MachineInfo) tea.Msg {
 	if results == nil {
@@ -72,18 +73,14 @@ func createEcosystem(results []vagrant.MachineInfo) tea.Msg {
 		environments[i] = env
 		i += 1
 	}
-	return Ecosystem{
+	return ecosystemMsg{
 		environments: environments,
 		selectedEnv:  &environments[0],
 	}
 }
 
 func (v Violet) Init() tea.Cmd {
-	client, err := vagrant.NewVagrantClient()
-	if err != nil {
-		log.Fatal(err)
-	}
-	return getGlobalStatus(*client)
+	return getGlobalStatus
 }
 
 func Run() {
