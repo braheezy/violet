@@ -44,7 +44,7 @@ func (v Violet) View() string {
 	// Show VMs for the selected environment
 	vmArea := ""
 	if v.ecosystem.selectedEnv == nil {
-		vmArea = "No environment selected..."
+		vmArea = "\n"
 	} else {
 		vmArea = fmt.Sprintf("VMs in [%v]:\n", v.ecosystem.selectedEnv.name)
 		VMs := [3]VM{

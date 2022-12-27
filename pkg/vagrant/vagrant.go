@@ -5,7 +5,6 @@ import (
 	"bufio"
 	"errors"
 	"io"
-	"log"
 	"os"
 	"os/exec"
 	"regexp"
@@ -71,7 +70,6 @@ func (c *VagrantClient) RunCommand(command string, outputCh chan<- string) error
 		return err
 	}
 
-	log.Print("Running command", cmd)
 	if err := cmd.Start(); err != nil {
 		return err
 	}
