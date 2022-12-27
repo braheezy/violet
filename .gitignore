@@ -1,5 +1,5 @@
 .vscode
 notes*
 bin
-
+*.log
 dist/
