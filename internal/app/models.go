@@ -1,12 +1,24 @@
 package app
 
 import (
-	"log"
-
-	"github.com/braheezy/violet/pkg/vagrant"
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/textinput"
 )
+
+// **************************************************************************
+//
+//	Ecosystem Model
+//
+// **************************************************************************
+// Ecosystem provides a single pane into all Environments
+type Ecosystem struct {
+	environments []Environment
+	selectedEnv  *Environment
+}
+
+func (d *Ecosystem) UpdateEnvs(envs []Environment) {
+	d.environments = envs
+}
 
 // **************************************************************************
 //
@@ -18,7 +30,8 @@ type Environment struct {
 	// A friendly name for the Environment
 	name string
 	// Environments have 0 or more VMs
-	VMs []VM
+	VMs        []VM
+	selectedVM *VM
 }
 
 // **************************************************************************
@@ -37,36 +50,23 @@ type VM struct {
 
 // **************************************************************************
 //
-//	Dashboard Model
-//
-// **************************************************************************
-// Dashboard provides a single pane into all Environments. Includes methods for managing Environments (and VMs).
-type Dashboard struct {
-	environments []Environment
-	selected     *Environment
-}
-
-// **************************************************************************
-//
 //	Violet Model
 //
 // **************************************************************************
-// sessionState is used to track which model is focused
-type sessionState uint
+// focusState is used to track which model is focused
+type focusState uint
 
-// Enumerate available states
+// Enumerate available areas the user can focus
 const (
-	environmentView sessionState = iota
+	environmentView focusState = iota
 	vmView
 	commandView
 )
 
 // Complete app state (i.e. the BubbleTea model)
 type Violet struct {
-	// Reference to the VagrantClient to use for all calls.
-	vagrantClient *vagrant.VagrantClient
-	// Reference to the Dashboard
-	dashboard Dashboard
+	// Reference to the Ecosystem
+	ecosystem Ecosystem
 	// Fancy help bubble
 	help help.Model
 	// To support help
@@ -74,27 +74,22 @@ type Violet struct {
 	// User input to Vagrant terminal
 	textInput textinput.Model
 	// The currently selected view
-	state sessionState
+	focus focusState
 }
 
 func newViolet() Violet {
-	vagrantClient, err := vagrant.NewVagrantClient()
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	textInput := textinput.New()
 	textInput.Placeholder = "Send text to the terminal running Vagrant..."
 
 	return Violet{
-		vagrantClient: vagrantClient,
-		dashboard: Dashboard{
+		ecosystem: Ecosystem{
 			environments: nil,
-			selected:     nil,
+			selectedEnv:  nil,
 		},
 		keys:      keys,
 		help:      help.New(),
 		textInput: textInput,
-		state:     environmentView,
+		focus:     environmentView,
 	}
 }

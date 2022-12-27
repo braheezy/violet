@@ -10,28 +10,41 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-type globalStatusMsg Dashboard
-
-type globalStatusErrMsg struct{ err error }
-
-func (e globalStatusErrMsg) Error() string { return e.err.Error() }
-
-func initGlobalStatus() tea.Msg {
-	results := []vagrant.MachineInfo{
-		{
-			Name: "",
-			Fields: map[string]string{
-				"provider-name": "libvirt",
-				"state":         "shutoff",
-				"machine-home":  "/home/braheezy/prettybox/runners",
-				"machine-id":    "c03b277",
-			},
-		},
+func readChanToString(input chan string) (result string) {
+	for line := range input {
+		result += line + "\n"
 	}
+	return result
+}
 
+type ecosystemMsg Ecosystem
+
+type ecosystemErrMsg struct{ err error }
+
+func (e ecosystemErrMsg) Error() string { return e.err.Error() }
+
+func getGlobalStatus(client vagrant.VagrantClient) tea.Cmd {
+	return func() tea.Msg {
+		output := make(chan string)
+		var err error
+		go func() {
+			err = client.RunCommand("global-status", output)
+		}()
+		if err != nil {
+			return ecosystemErrMsg{err}
+		}
+		result := readChanToString(output)
+		results := vagrant.ParseVagrantOutput(result)
+		return createEcosystem(results)
+	}
+}
+func createEcosystem(results []vagrant.MachineInfo) tea.Msg {
+	if results == nil {
+		return nil
+	}
 	// Create the VM struct
-	VMs := make([]VM, len(results))
-	for i, machineInfo := range results {
+	var VMs []VM
+	for _, machineInfo := range results {
 		name := machineInfo.Name
 		if name == "" {
 			name = machineInfo.Fields["machine-id"]
@@ -42,32 +55,41 @@ func initGlobalStatus() tea.Msg {
 			state:    machineInfo.Fields["state"],
 			home:     machineInfo.Fields["machine-home"],
 		}
-		VMs[i] = vm
-	}
-	envGroups := make(map[string][]VM)
-	for _, vm := range VMs {
-		envGroups[path.Base(vm.home)] = append(envGroups[path.Base(vm.home)], vm)
-	}
-
-	environments := make([]Environment, len(envGroups))
-	i := 0
-	for envName, vms := range envGroups {
-		env := Environment{
-			name: envName,
-			VMs:  vms,
+		VMs = append(VMs, vm)
+		if results == nil {
+			return nil
+		} else {
+			envGroups := make(map[string][]VM)
+			for _, vm := range VMs {
+				envGroups[path.Base(vm.home)] = append(envGroups[path.Base(vm.home)], vm)
+			}
+			environments := make([]Environment, len(envGroups))
+			i := 0
+			for envName, vms := range envGroups {
+				env := Environment{
+					name:       envName,
+					VMs:        vms,
+					selectedVM: &vms[0],
+				}
+				environments[i] = env
+				i += 1
+			}
+			return Ecosystem{
+				environments: environments,
+				selectedEnv:  &environments[0],
+			}
 		}
-		environments[i] = env
-		i += 1
 	}
-
-	return globalStatusMsg{
-		environments: environments,
-		selected:     nil,
-	}
+	// Not sure why compiler required this to be here...
+	return nil
 }
 
 func (v Violet) Init() tea.Cmd {
-	return initGlobalStatus
+	client, err := vagrant.NewVagrantClient()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return getGlobalStatus(*client)
 }
 
 func Run() {
@@ -79,7 +101,6 @@ func Run() {
 			defer f.Close()
 		}
 	}
-
 	if _, err := tea.NewProgram(newViolet()).Run(); err != nil {
 		log.Fatalf("Could not start program :(\n%v\n", err)
 	}

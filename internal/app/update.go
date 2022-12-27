@@ -63,6 +63,15 @@ func (k helpKeyMap) FullHelp() [][]key.Binding {
 	}
 }
 
+func Select[T any](list *[]T, current *T, direction int) *T {
+	for i := range *list {
+		if &(*list)[i] == current {
+			return &((*list)[(i+direction)%len(*list)])
+		}
+	}
+	return nil
+}
+
 func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
@@ -71,23 +80,24 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		v.help.Width = msg.Width
 
 	case tea.KeyMsg:
+		cursorInc := 0
 		switch {
 		case key.Matches(msg, v.keys.Up):
-			break
+			cursorInc = 1
 		case key.Matches(msg, v.keys.Down):
-			break
+			cursorInc = -1
 		case key.Matches(msg, v.keys.Left):
-			break
+			cursorInc = -1
 		case key.Matches(msg, v.keys.Right):
-			break
+			cursorInc = 1
 		case key.Matches(msg, v.keys.Switch):
-			switch v.state {
+			switch v.focus {
 			case environmentView:
-				v.state = vmView
+				v.focus = vmView
 			case vmView:
-				v.state = commandView
+				v.focus = commandView
 			case commandView:
-				v.state = environmentView
+				v.focus = environmentView
 			}
 		case key.Matches(msg, v.keys.Help):
 			v.help.ShowAll = !v.help.ShowAll
@@ -95,8 +105,19 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return v, tea.Quit
 		}
 
-	case globalStatusMsg:
-		v.dashboard = Dashboard(msg)
+		if cursorInc != 0 {
+			switch v.focus {
+			case environmentView:
+				v.ecosystem.selectedEnv = Select(&(v.ecosystem.environments), v.ecosystem.selectedEnv, cursorInc)
+			case vmView:
+				v.ecosystem.selectedEnv.selectedVM = Select(&(v.ecosystem.selectedEnv.VMs), v.ecosystem.selectedEnv.selectedVM, cursorInc)
+			case commandView:
+				break
+			}
+		}
+
+	case ecosystemMsg:
+		v.ecosystem = Ecosystem(msg)
 	}
 
 	return v, nil

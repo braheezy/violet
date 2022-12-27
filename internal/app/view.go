@@ -26,10 +26,15 @@ func (v Violet) View() string {
 	// Show the current environments
 	envArea := "Environments:\n"
 	envArea += "\t"
-	for _, env := range v.dashboard.environments {
-		envArea += fmt.Sprintf("[%v]", env.name)
+	if v.ecosystem.environments == nil {
+		envArea += "No environments found :("
+	} else {
+		for _, env := range v.ecosystem.environments {
+			envArea += fmt.Sprintf("[%v]", env.name)
+		}
 	}
-	if v.state == environmentView {
+
+	if v.focus == environmentView {
 		view += focusedStyle.Render(envArea)
 	} else {
 		view += envArea
@@ -37,11 +42,28 @@ func (v Violet) View() string {
 	view += "\n\n"
 
 	// Show VMs for the selected environment
-	vmArea := "VMs in [env2]:\n"
-	vmArea += "\t[ ] vm1 (provider: virtualbox, state: running)\n"
-	vmArea += "\t[x] vm2 (provider: vmware,     state: not created)\n"
-	vmArea += "\t[ ] vm3 (provider: virtualbox, state: running)\n"
-	if v.state == vmView {
+	vmArea := ""
+	if v.ecosystem.selectedEnv == nil {
+		vmArea = "No environment selected..."
+	} else {
+		vmArea = fmt.Sprintf("VMs in [%v]:\n", v.ecosystem.selectedEnv.name)
+		VMs := [3]VM{
+			{"vm1", "virtualbox", "running", "/vm/home/runners"},
+			{"vm2", "vmware", "not created", "/vm/home/runners"},
+			{"vm3", "virtualbox", "running", "/vm/home/runners"},
+		}
+		for _, vm := range VMs {
+			if vm.name == v.ecosystem.selectedEnv.selectedVM.name {
+				vmArea += "\t[x] "
+			} else {
+				vmArea += "\t[ ] "
+			}
+			vmArea += strings.Join([]string{vm.name, vm.provider, vm.state}, " ")
+			vmArea += "\n"
+		}
+	}
+
+	if v.focus == vmView {
 		view += focusedStyle.Render(vmArea)
 	} else {
 		view += vmArea
@@ -52,7 +74,7 @@ func (v Violet) View() string {
 	commandArea := "Commands:\n"
 	supportedCommands := []string{"up", "halt", "provision"}
 	commandArea += strings.Join(supportedCommands, "\t")
-	if v.state == commandView {
+	if v.focus == commandView {
 		view += focusedStyle.Render(commandArea)
 	} else {
 		view += commandArea
