@@ -55,7 +55,7 @@ endif
 $(BIN): build
 
 run: $(BIN)
-	@exec $?
+	@VIOLET_DEBUG=1 exec $?
 
 debug:
 	@dlv debug --listen ":2345" --headless ./cmd/violet/
