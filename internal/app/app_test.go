@@ -22,7 +22,35 @@ Test Goals:
 */
 
 func Test_createEcosystem(t *testing.T) {
-	// Define reusable VM and Env struct, and to get their addresses
+	testMachineInfos := []vagrant.MachineInfo{
+		{
+			Name: "vm1",
+			Fields: map[string]string{
+				"provider-name": "libvirt",
+				"state":         "shutoff",
+				"machine-home":  "/home/test/env1",
+				"machine-id":    "c03b277",
+			},
+		},
+		{
+			Name: "vm2",
+			Fields: map[string]string{
+				"provider-name": "libvirt",
+				"state":         "running",
+				"machine-home":  "/home/test/env1",
+				"machine-id":    "23d32r",
+			},
+		},
+		{
+			Name: "vm3",
+			Fields: map[string]string{
+				"provider-name": "virtualbox",
+				"state":         "not created",
+				"machine-home":  "/home/test/env2",
+				"machine-id":    "34reef3",
+			},
+		},
+	}
 	testVMs := []VM{
 		{
 			name:     "vm1",
@@ -59,6 +87,13 @@ func Test_createEcosystem(t *testing.T) {
 			},
 			selectedVM: &testVMs[0],
 		},
+		{
+			name: "env2",
+			VMs: []VM{
+				testVMs[2],
+			},
+			selectedVM: &testVMs[2],
+		},
 	}
 
 	tests := []struct {
@@ -74,21 +109,28 @@ func Test_createEcosystem(t *testing.T) {
 		{
 			name: "global-status: One VM, One Env",
 			input: []vagrant.MachineInfo{
-				{
-					Name: "vm1",
-					Fields: map[string]string{
-						"provider-name": "libvirt",
-						"state":         "shutoff",
-						"machine-home":  "/home/test/env1",
-						"machine-id":    "c03b277",
-					},
-				},
+				testMachineInfos[0],
 			},
 			expected: Ecosystem{
 				environments: []Environment{
 					testEnvs[0],
 				},
 				selectedEnv: &testEnvs[0],
+			},
+		},
+		{
+			name: "global-status: Multi VM, Multi Env",
+			input: []vagrant.MachineInfo{
+				testMachineInfos[0],
+				testMachineInfos[1],
+				testMachineInfos[2],
+			},
+			expected: Ecosystem{
+				environments: []Environment{
+					testEnvs[1],
+					testEnvs[2],
+				},
+				selectedEnv: &testEnvs[1],
 			},
 		},
 	}

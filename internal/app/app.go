@@ -56,32 +56,26 @@ func createEcosystem(results []vagrant.MachineInfo) tea.Msg {
 			home:     machineInfo.Fields["machine-home"],
 		}
 		VMs = append(VMs, vm)
-		if results == nil {
-			return nil
-		} else {
-			envGroups := make(map[string][]VM)
-			for _, vm := range VMs {
-				envGroups[path.Base(vm.home)] = append(envGroups[path.Base(vm.home)], vm)
-			}
-			environments := make([]Environment, len(envGroups))
-			i := 0
-			for envName, vms := range envGroups {
-				env := Environment{
-					name:       envName,
-					VMs:        vms,
-					selectedVM: &vms[0],
-				}
-				environments[i] = env
-				i += 1
-			}
-			return Ecosystem{
-				environments: environments,
-				selectedEnv:  &environments[0],
-			}
-		}
 	}
-	// Not sure why compiler required this to be here...
-	return nil
+	envGroups := make(map[string][]VM)
+	for _, vm := range VMs {
+		envGroups[path.Base(vm.home)] = append(envGroups[path.Base(vm.home)], vm)
+	}
+	environments := make([]Environment, len(envGroups))
+	i := 0
+	for envName, vms := range envGroups {
+		env := Environment{
+			name:       envName,
+			VMs:        vms,
+			selectedVM: &vms[0],
+		}
+		environments[i] = env
+		i += 1
+	}
+	return Ecosystem{
+		environments: environments,
+		selectedEnv:  &environments[0],
+	}
 }
 
 func (v Violet) Init() tea.Cmd {
