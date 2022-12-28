@@ -63,10 +63,17 @@ func (k helpKeyMap) FullHelp() [][]key.Binding {
 	}
 }
 
+// Go `%` operator is not the same as Python, which gives you the actual modulo in return.
+// This function does what `%` does in Python.
+// https://stackoverflow.com/questions/43018206/modulo-of-negative-integers-in-go
+func mod(a, b int) int {
+	return (a%b + b) % b
+}
+
 func Select[T any](list *[]T, current *T, direction int) *T {
 	for i := range *list {
 		if &(*list)[i] == current {
-			return &((*list)[(i+direction)%len(*list)])
+			return &((*list)[mod((i+direction), len(*list))])
 		}
 	}
 	return nil
