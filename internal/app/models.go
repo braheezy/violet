@@ -91,13 +91,16 @@ func newViolet() Violet {
 	textInput := textinput.New()
 	textInput.Placeholder = "Send text to the terminal running Vagrant..."
 
+	help := help.New()
+	help.ShowAll = true
+
 	return Violet{
 		ecosystem: Ecosystem{
 			environments: nil,
 			selectedEnv:  nil,
 		},
 		keys:      keys,
-		help:      help.New(),
+		help:      help,
 		textInput: textInput,
 		focus:     environmentView,
 		client:    client,
