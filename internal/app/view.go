@@ -46,13 +46,8 @@ func (v Violet) View() string {
 	if v.ecosystem.selectedEnv == nil {
 		vmArea = "\n"
 	} else {
-		vmArea = fmt.Sprintf("VMs in [%v]:\n", v.ecosystem.selectedEnv.name)
-		VMs := [3]VM{
-			{"vm1", "virtualbox", "running", "/vm/home/runners"},
-			{"vm2", "vmware", "not created", "/vm/home/runners"},
-			{"vm3", "virtualbox", "running", "/vm/home/runners"},
-		}
-		for _, vm := range VMs {
+		vmArea = fmt.Sprintf("VMs in %v environment:\n", v.ecosystem.selectedEnv.name)
+		for _, vm := range v.ecosystem.selectedEnv.VMs {
 			if vm.name == v.ecosystem.selectedEnv.selectedVM.name {
 				vmArea += "\t[x] "
 			} else {

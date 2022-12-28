@@ -1,6 +1,9 @@
 package app
 
 import (
+	"log"
+
+	"github.com/braheezy/violet/pkg/vagrant"
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/textinput"
 )
@@ -75,9 +78,15 @@ type Violet struct {
 	textInput textinput.Model
 	// The currently selected view
 	focus focusState
+	// A copy of the Vagrant client to share around
+	client *vagrant.VagrantClient
 }
 
 func newViolet() Violet {
+	client, err := vagrant.NewVagrantClient()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	textInput := textinput.New()
 	textInput.Placeholder = "Send text to the terminal running Vagrant..."
@@ -91,5 +100,6 @@ func newViolet() Violet {
 		help:      help.New(),
 		textInput: textInput,
 		focus:     environmentView,
+		client:    client,
 	}
 }

@@ -50,6 +50,15 @@ func Test_createEcosystem(t *testing.T) {
 				"machine-id":    "34reef3",
 			},
 		},
+		{
+			Name: "vm4",
+			Fields: map[string]string{
+				"provider-name": "virtualbox",
+				"state":         "not created",
+				"machine-home":  "/home/differentUser/env1",
+				"machine-id":    "102378/*",
+			},
+		},
 	}
 	testVMs := []VM{
 		{
@@ -69,6 +78,12 @@ func Test_createEcosystem(t *testing.T) {
 			provider: "virtualbox",
 			state:    "not created",
 			home:     "/home/test/env2",
+		},
+		{
+			name:     "vm4",
+			provider: "virtualbox",
+			state:    "not created",
+			home:     "/home/differentUser/env1",
 		},
 	}
 	testEnvs := []Environment{
@@ -94,6 +109,13 @@ func Test_createEcosystem(t *testing.T) {
 			},
 			selectedVM: &testVMs[2],
 		},
+		{
+			name: "env2",
+			VMs: []VM{
+				testVMs[3],
+			},
+			selectedVM: &testVMs[3],
+		},
 	}
 
 	tests := []struct {
@@ -111,7 +133,7 @@ func Test_createEcosystem(t *testing.T) {
 			input: []vagrant.MachineInfo{
 				testMachineInfos[0],
 			},
-			expected: Ecosystem{
+			expected: ecosystemMsg{
 				environments: []Environment{
 					testEnvs[0],
 				},
@@ -125,7 +147,7 @@ func Test_createEcosystem(t *testing.T) {
 				testMachineInfos[1],
 				testMachineInfos[2],
 			},
-			expected: Ecosystem{
+			expected: ecosystemMsg{
 				environments: []Environment{
 					testEnvs[1],
 					testEnvs[2],

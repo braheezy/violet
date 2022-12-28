@@ -34,7 +34,9 @@
 |      A splash of color for `vagrant`  :art:
 |
 |  Environments:
-|        [env1] [env2] [env3]
+|        [/path/to/env1] (1 VM)
+|    --> [/path/to/env2] (2 VM)
+|        [/path/to/env3] (1 VM)
 |
 |  VMs in [env2]:
 |        [ ] vm1 (provider: virtualbox, state: running)
@@ -42,7 +44,9 @@
 |        [ ] vm3 (provider: virtualbox, state: running)
 |
 |  Commands:
-|  up    halt    ssh
+|        up       <description>
+|        halt     <description>
+|        ssh      <description>
 |
 |  Vagrant Output:
 |  [Output from Vagrant commands goes here]

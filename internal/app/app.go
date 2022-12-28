@@ -23,7 +23,7 @@ type ecosystemErrMsg struct{ err error }
 
 func (e ecosystemErrMsg) Error() string { return e.err.Error() }
 
-func getGlobalStatus() tea.Msg {
+func getInitialGlobalStatus() tea.Msg {
 	client, err := vagrant.NewVagrantClient()
 	if err != nil {
 		log.Fatal(err)
@@ -48,7 +48,7 @@ func createEcosystem(results []vagrant.MachineInfo) tea.Msg {
 	for _, machineInfo := range results {
 		name := machineInfo.Name
 		if name == "" {
-			name = machineInfo.Fields["machine-id"]
+			name = getStatusForID(machineInfo.Fields["machine-id"]).Name
 		}
 		vm := VM{
 			name:     name,
@@ -60,27 +60,44 @@ func createEcosystem(results []vagrant.MachineInfo) tea.Msg {
 	}
 	envGroups := make(map[string][]VM)
 	for _, vm := range VMs {
+		// TODO: Bug if two different paths have the same folder name
 		envGroups[path.Base(vm.home)] = append(envGroups[path.Base(vm.home)], vm)
 	}
-	environments := make([]Environment, len(envGroups))
-	i := 0
+	var environments []Environment
 	for envName, vms := range envGroups {
 		env := Environment{
 			name:       envName,
 			VMs:        vms,
 			selectedVM: &vms[0],
 		}
-		environments[i] = env
-		i += 1
+		environments = append(environments, env)
 	}
 	return ecosystemMsg{
 		environments: environments,
 		selectedEnv:  &environments[0],
 	}
 }
-
+func getStatusForID(machineID string) vagrant.MachineInfo {
+	client, err := vagrant.NewVagrantClient()
+	if err != nil {
+		log.Fatal(err)
+	}
+	output := make(chan string)
+	go func() {
+		err = client.RunCommand(fmt.Sprintf("status %v", machineID), output)
+	}()
+	if err != nil {
+		return vagrant.MachineInfo{}
+	}
+	result := readChanToString(output)
+	results := vagrant.ParseVagrantOutput(result)
+	if results == nil {
+		return vagrant.MachineInfo{}
+	}
+	return results[0]
+}
 func (v Violet) Init() tea.Cmd {
-	return getGlobalStatus
+	return getInitialGlobalStatus
 }
 
 func Run() {
