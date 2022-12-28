@@ -10,13 +10,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-func readChanToString(input chan string) (result string) {
-	for line := range input {
-		result += line + "\n"
-	}
-	return result
-}
-
 type ecosystemMsg Ecosystem
 
 type ecosystemErrMsg struct{ err error }
@@ -28,27 +21,27 @@ func getInitialGlobalStatus() tea.Msg {
 	if err != nil {
 		log.Fatal(err)
 	}
-	output := make(chan string)
-	go func() {
-		err = client.RunCommand("global-status", output)
-	}()
+	ecosystem, err := createEcosystem(client)
 	if err != nil {
 		return ecosystemErrMsg{err}
 	}
-	result := readChanToString(output)
-	results := vagrant.ParseVagrantOutput(result)
-	return createEcosystem(results)
+	return ecosystemMsg(ecosystem)
 }
-func createEcosystem(results []vagrant.MachineInfo) tea.Msg {
+func createEcosystem(client *vagrant.VagrantClient) (Ecosystem, error) {
+	result := client.GetGlobalStatus()
+	var nilEcosystem Ecosystem
+	results := vagrant.ParseVagrantOutput(result)
 	if results == nil {
-		return nil
+		return nilEcosystem, nil
 	}
 	// Create the VM struct
 	var VMs []VM
 	for _, machineInfo := range results {
 		name := machineInfo.Name
 		if name == "" {
-			name = getStatusForID(machineInfo.Fields["machine-id"]).Name
+			result := client.GetStatusForID(machineInfo.Fields["machine-id"])
+			status := vagrant.ParseVagrantOutput(result)
+			name = status[0].Name
 		}
 		vm := VM{
 			name:     name,
@@ -72,30 +65,12 @@ func createEcosystem(results []vagrant.MachineInfo) tea.Msg {
 		}
 		environments = append(environments, env)
 	}
-	return ecosystemMsg{
+	return Ecosystem{
 		environments: environments,
 		selectedEnv:  &environments[0],
-	}
+	}, nil
 }
-func getStatusForID(machineID string) vagrant.MachineInfo {
-	client, err := vagrant.NewVagrantClient()
-	if err != nil {
-		log.Fatal(err)
-	}
-	output := make(chan string)
-	go func() {
-		err = client.RunCommand(fmt.Sprintf("status %v", machineID), output)
-	}()
-	if err != nil {
-		return vagrant.MachineInfo{}
-	}
-	result := readChanToString(output)
-	results := vagrant.ParseVagrantOutput(result)
-	if results == nil {
-		return vagrant.MachineInfo{}
-	}
-	return results[0]
-}
+
 func (v Violet) Init() tea.Cmd {
 	return getInitialGlobalStatus
 }

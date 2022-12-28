@@ -4,7 +4,7 @@ package vagrant
 import (
 	"bufio"
 	"errors"
-	"io"
+	"fmt"
 	"os"
 	"os/exec"
 	"regexp"
@@ -48,49 +48,77 @@ func (c *VagrantClient) GetVersion() (string, error) {
 	if len(matches) > 0 {
 		version = matches[1]
 	} else {
-		// Something weird happened
+		// Did they change the format to the version?
 		version = "N/A"
 	}
 	return version, nil
 }
 
+func readChanToString(channel chan string) (result string) {
+	for value := range channel {
+		result += string(value) + "\n"
+	}
+	return result
+}
+
+func (c *VagrantClient) GetGlobalStatus() string {
+	output := make(chan string)
+	go c.RunCommand("global-status", output)
+
+	result := readChanToString(output)
+	return result
+
+}
+func (c *VagrantClient) GetStatusForID(machineID string) string {
+	output := make(chan string)
+	go c.RunCommand(fmt.Sprintf("status %v", machineID), output)
+
+	result := readChanToString(output)
+	return result
+}
+
 // Runs a Vagrant command and returns the result.
-func (c *VagrantClient) RunCommand(command string, outputCh chan<- string) error {
+func (c *VagrantClient) RunCommand(command string, outputCh chan string) {
+	defer close(outputCh)
 	// Create the Vagrant command and capture its output
 	cmd := exec.Command(c.ExecPath, append(strings.Split(command, " "), "--machine-readable")...)
 	cmd.Env = c.Env
 
-	// Create pipes for stdout and stderr
-	stdoutPipe, err := cmd.StdoutPipe()
+	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		return err
+		outputCh <- string(fmt.Sprintf("Error getting stdout pipe: %v", err))
 	}
-	stderrPipe, err := cmd.StderrPipe()
+	cmd.Stderr = cmd.Stdout
+
+	scanner := bufio.NewScanner(stdout)
+
+	done := make(chan struct{})
+
+	err = cmd.Start()
 	if err != nil {
-		return err
+		outputCh <- string(fmt.Sprintf("Error executing: %v", err))
 	}
 
-	if err := cmd.Start(); err != nil {
-		return err
-	}
-	// Read pipes as command runs
-	scanner := bufio.NewScanner(io.MultiReader(stdoutPipe, stderrPipe))
 	go func() {
 		for scanner.Scan() {
-			line := scanner.Text()
-			// Send output back to caller via channel
-			outputCh <- line
+			outputCh <- scanner.Text()
 		}
-		close(outputCh)
+		done <- struct{}{}
 	}()
 
-	if err := cmd.Wait(); err != nil {
-		return err
-	}
+	<-done
 
-	return nil
+	err = cmd.Wait()
+	if err != nil {
+		outputCh <- string(fmt.Sprintf("Error waiting for the script to complete: %v", err))
+	}
 }
 
+// **************************************************************************
+//
+//	Extras. Are these opinionated and don't belong in a public package?
+//
+// **************************************************************************
 // Represents the result of a Vagrant command under the context of a single VM.
 type MachineInfo struct {
 	// Name is the name of the machine.
@@ -111,6 +139,7 @@ func ParseVagrantOutput(output string) []MachineInfo {
 	}
 	var results []MachineInfo
 	var result MachineInfo
+	result.Fields = make(map[string]string)
 	for _, line := range strings.Split(output, "\n") {
 		// Check if the line matches any of the fields.
 		matched := false
@@ -121,12 +150,16 @@ func ParseVagrantOutput(output string) []MachineInfo {
 					// Save name if it's the first we've seen
 					if result.Name == "" {
 						result.Name = m[1]
-						result.Fields = make(map[string]string)
 					} else if result.Name != m[1] {
 						// New VM found. Create new Result
 						results = append(results, result)
 						result = MachineInfo{Name: m[1], Fields: make(map[string]string)}
 					}
+				} else if field == "machine-id" && result.Fields["machine-id"] != "" {
+					// New VM found. Create new Result
+					results = append(results, result)
+					result = MachineInfo{Name: m[1], Fields: make(map[string]string)}
+					result.Fields[field] = m[2]
 				} else {
 					// Update the result with the field value.
 					result.Fields[field] = m[2]
@@ -142,7 +175,7 @@ func ParseVagrantOutput(output string) []MachineInfo {
 		}
 	}
 	// Add the last result
-	if result.Name != "" || len(result.Fields) != 0 {
+	if len(result.Fields) != 0 {
 		results = append(results, result)
 	}
 	return results
