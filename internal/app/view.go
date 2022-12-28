@@ -30,14 +30,14 @@ func (v Violet) View() string {
 		envArea += "No environments found :("
 	} else {
 		for _, env := range v.ecosystem.environments {
-			envArea += fmt.Sprintf("[%v]\t", env.name)
+			if env.name == v.ecosystem.selectedEnv.name {
+				envArea += focusedStyle.Render(fmt.Sprintf("[%v]\t", env.name))
+			} else {
+				envArea += fmt.Sprintf("[%v]\t", env.name)
+			}
 		}
 	}
-	if v.focus == environmentView {
-		view += focusedStyle.Render(envArea)
-	} else {
-		view += envArea
-	}
+	view += envArea
 	view += "\n\n"
 
 	// Show VMs for the selected environment
