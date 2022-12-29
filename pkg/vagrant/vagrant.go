@@ -63,7 +63,7 @@ func readChanToString(channel chan string) (result string) {
 
 func (c *VagrantClient) GetGlobalStatus() string {
 	output := make(chan string)
-	go c.RunCommand("global-status", output)
+	go c.RunCommand("global-status --machine-readable", output)
 
 	result := readChanToString(output)
 	return result
@@ -71,7 +71,7 @@ func (c *VagrantClient) GetGlobalStatus() string {
 }
 func (c *VagrantClient) GetStatusForID(machineID string) string {
 	output := make(chan string)
-	go c.RunCommand(fmt.Sprintf("status %v", machineID), output)
+	go c.RunCommand(fmt.Sprintf("status %v --machine-readable", machineID), output)
 
 	result := readChanToString(output)
 	return result
@@ -81,7 +81,7 @@ func (c *VagrantClient) GetStatusForID(machineID string) string {
 func (c *VagrantClient) RunCommand(command string, outputCh chan string) {
 	defer close(outputCh)
 	// Create the Vagrant command and capture its output
-	cmd := exec.Command(c.ExecPath, append(strings.Split(command, " "), "--machine-readable")...)
+	cmd := exec.Command(c.ExecPath, strings.Split(command, " ")...)
 	cmd.Env = c.Env
 
 	stdout, err := cmd.StdoutPipe()

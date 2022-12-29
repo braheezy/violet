@@ -82,7 +82,9 @@ func (v Violet) View() string {
 
 	// Area to view output from Vagrant commands
 	outputView := "Vagrant Output:\n"
-	outputView += "\n\n\n\n\n\n\n"
+	if v.vagrantOutputView.hasContent() {
+		outputView += v.vagrantOutputView.viewport.View()
+	}
 	view += outputView
 	view += "\n\n"
 

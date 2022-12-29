@@ -10,35 +10,40 @@ import (
 // helpKeyMap defines a set of keybindings. To work for help it must satisfy
 // key.Map. It could also very easily be a map[string]key.Binding.
 type helpKeyMap struct {
-	Up     key.Binding
-	Down   key.Binding
-	Left   key.Binding
-	Right  key.Binding
-	Switch key.Binding
-	Help   key.Binding
-	Quit   key.Binding
+	Up      key.Binding
+	Down    key.Binding
+	Left    key.Binding
+	Right   key.Binding
+	Switch  key.Binding
+	Execute key.Binding
+	Help    key.Binding
+	Quit    key.Binding
 }
 
 var keys = helpKeyMap{
 	Up: key.NewBinding(
 		key.WithKeys("up", "k"),
-		key.WithHelp("↑/k", "move up"),
+		key.WithHelp("↑/k", "scroll output up"),
 	),
 	Down: key.NewBinding(
 		key.WithKeys("down", "j"),
-		key.WithHelp("↓/j", "move down"),
+		key.WithHelp("↓/j", "scroll output down"),
 	),
 	Left: key.NewBinding(
 		key.WithKeys("left", "h"),
-		key.WithHelp("←/h", "move left"),
+		key.WithHelp("←/h", "move selection left"),
 	),
 	Right: key.NewBinding(
 		key.WithKeys("right", "l"),
-		key.WithHelp("→/l", "move right"),
+		key.WithHelp("→/l", "move selection right"),
 	),
 	Switch: key.NewBinding(
 		key.WithKeys("tab"),
 		key.WithHelp("⭾ tab", "switch views"),
+	),
+	Execute: key.NewBinding(
+		key.WithKeys("enter"),
+		key.WithHelp("⏎ enter/return", "run command"),
 	),
 	Help: key.NewBinding(
 		key.WithKeys("?"),
@@ -93,9 +98,9 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cursorInc := 0
 		switch {
 		case key.Matches(msg, v.keys.Up):
-			cursorInc = 1
+			break
 		case key.Matches(msg, v.keys.Down):
-			cursorInc = -1
+			break
 		case key.Matches(msg, v.keys.Left):
 			cursorInc = -1
 		case key.Matches(msg, v.keys.Right):
@@ -109,6 +114,8 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case commandView:
 				v.focus = environmentView
 			}
+		case key.Matches(msg, v.keys.Execute):
+			return v, v.Execute(v.selectedCommand)
 		case key.Matches(msg, v.keys.Help):
 			v.help.ShowAll = !v.help.ShowAll
 		case key.Matches(msg, v.keys.Quit):
@@ -128,7 +135,16 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case ecosystemMsg:
 		v.ecosystem = Ecosystem(msg)
-	}
 
-	return v, nil
+	case executeMsg:
+		var content string
+		for value := range msg {
+			content += string(value) + "\n"
+		}
+		v.vagrantOutputView.viewport.SetContent(content)
+	}
+	var vpCmd tea.Cmd
+	v.vagrantOutputView.viewport, vpCmd = v.vagrantOutputView.viewport.Update(msg)
+
+	return v, vpCmd
 }

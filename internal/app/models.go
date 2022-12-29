@@ -6,6 +6,7 @@ import (
 	"github.com/braheezy/violet/pkg/vagrant"
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/textinput"
+	"github.com/charmbracelet/bubbles/viewport"
 )
 
 // **************************************************************************
@@ -66,6 +67,16 @@ const (
 	commandView
 )
 
+type outputViewport struct {
+	viewport viewport.Model
+}
+
+func (o *outputViewport) hasContent() bool {
+	currentSize := len(o.viewport.View())
+	defaultSize := outputHeight * outputWidth
+	return currentSize > defaultSize
+}
+
 // Complete app state (i.e. the BubbleTea model)
 type Violet struct {
 	// Reference to the Ecosystem
@@ -84,6 +95,8 @@ type Violet struct {
 	supportedCommands []string
 	// Currently selected Vagrant command to run
 	selectedCommand string
+	// The viewport to view Vagrant output
+	vagrantOutputView outputViewport
 }
 
 func newViolet() Violet {
@@ -98,6 +111,9 @@ func newViolet() Violet {
 	help := help.New()
 	help.ShowAll = true
 
+	vagrantOutputView := viewport.New(outputHeight, outputWidth)
+	vagrantOutputView.Style = outputViewStyle
+
 	return Violet{
 		ecosystem: Ecosystem{
 			environments: nil,
@@ -110,5 +126,6 @@ func newViolet() Violet {
 		client:            client,
 		supportedCommands: []string{"up", "halt", "provision", "ssh"},
 		selectedCommand:   "up",
+		vagrantOutputView: outputViewport{vagrantOutputView},
 	}
 }

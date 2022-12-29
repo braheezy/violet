@@ -70,9 +70,18 @@ func createEcosystem(client *vagrant.VagrantClient) (Ecosystem, error) {
 		selectedEnv:  &environments[0],
 	}, nil
 }
-
 func (v Violet) Init() tea.Cmd {
 	return getInitialGlobalStatus
+}
+
+type executeMsg chan string
+
+func (v Violet) Execute(command string) tea.Cmd {
+	return func() tea.Msg {
+		output := make(chan string)
+		go v.client.RunCommand("global-status", output)
+		return executeMsg(output)
+	}
 }
 
 func Run() {
