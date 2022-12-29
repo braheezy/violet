@@ -82,7 +82,6 @@ func (c *VagrantClient) GetStatusForID(machineID string) (string, error) {
 
 // Run a Vagrant command and stream the result back to caller over outputCh
 func (c *VagrantClient) RunCommand(command string, outputCh chan string) {
-	defer close(outputCh)
 	cmd := exec.Command(c.ExecPath, strings.Split(command, " ")...)
 	cmd.Env = c.Env
 
