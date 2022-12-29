@@ -65,9 +65,14 @@ func (v Violet) View() string {
 	view += "\n\n"
 
 	// The available commands to run on selected VM
-	commandArea := "Commands:\n"
-	supportedCommands := []string{"up", "halt", "provision"}
-	commandArea += strings.Join(supportedCommands, "\t")
+	commandArea := "Commands:\n\t"
+	for _, cmd := range v.supportedCommands {
+		if v.selectedCommand == cmd {
+			commandArea += commandSelectStyle.Render(cmd + "\t")
+		} else {
+			commandArea += cmd + "\t"
+		}
+	}
 	if v.focus == commandView {
 		view += focusedStyle.Render(commandArea)
 	} else {

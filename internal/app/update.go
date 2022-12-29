@@ -1,6 +1,8 @@
 package app
 
 import (
+	"reflect"
+
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -72,7 +74,8 @@ func mod(a, b int) int {
 
 func Select[T any](list *[]T, current *T, direction int) *T {
 	for i := range *list {
-		if &(*list)[i] == current {
+		if reflect.DeepEqual(current, &(*list)[i]) {
+			// Return the next item using modulo math
 			return &((*list)[mod((i+direction), len(*list))])
 		}
 	}
@@ -119,7 +122,7 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case vmView:
 				v.ecosystem.selectedEnv.selectedVM = Select(&(v.ecosystem.selectedEnv.VMs), v.ecosystem.selectedEnv.selectedVM, cursorInc)
 			case commandView:
-				break
+				v.selectedCommand = *(Select(&(v.supportedCommands), &(v.selectedCommand), cursorInc))
 			}
 		}
 

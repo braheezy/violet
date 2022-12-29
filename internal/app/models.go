@@ -80,6 +80,10 @@ type Violet struct {
 	focus focusState
 	// A copy of the Vagrant client to share around
 	client *vagrant.VagrantClient
+	// The Vagrant commands that Violet can run
+	supportedCommands []string
+	// Currently selected Vagrant command to run
+	selectedCommand string
 }
 
 func newViolet() Violet {
@@ -99,10 +103,12 @@ func newViolet() Violet {
 			environments: nil,
 			selectedEnv:  nil,
 		},
-		keys:      keys,
-		help:      help,
-		textInput: textInput,
-		focus:     environmentView,
-		client:    client,
+		keys:              keys,
+		help:              help,
+		textInput:         textInput,
+		focus:             environmentView,
+		client:            client,
+		supportedCommands: []string{"up", "halt", "provision", "ssh"},
+		selectedCommand:   "up",
 	}
 }
