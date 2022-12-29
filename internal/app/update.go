@@ -115,7 +115,11 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				v.focus = environmentView
 			}
 		case key.Matches(msg, v.keys.Execute):
-			break
+			return v, v.streamCommandOnVM(
+				v.selectedCommand,
+				v.ecosystem.selectedEnv.selectedVM.name,
+				v.ecosystem.selectedEnv.selectedVM.home,
+			)
 		case key.Matches(msg, v.keys.Help):
 			v.help.ShowAll = !v.help.ShowAll
 		case key.Matches(msg, v.keys.Quit):

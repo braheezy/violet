@@ -57,6 +57,19 @@ func TestRunCommand(t *testing.T) {
 	})
 }
 
+func TestRunCommandInDir(t *testing.T) {
+	client, _ := NewVagrantClient()
+
+	t.Run("Verify a valid Vagrant command in a directory", func(t *testing.T) {
+		output := make(chan string)
+		go client.RunCommandInDir("global-status", "/tmp", output)
+
+		result := ReadChanToString(output)
+
+		require.Greater(t, len(result), 40)
+	})
+}
+
 func TestGetGlobalStatus(t *testing.T) {
 	client, _ := NewVagrantClient()
 

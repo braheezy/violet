@@ -94,10 +94,10 @@ func (v Violet) getVMStatus(identifier string) tea.Cmd {
 
 type streamMsg chan string
 
-func (v Violet) streamCommandOnVM(identifier string, command string) tea.Cmd {
+func (v Violet) streamCommandOnVM(command string, identifier string, home string) tea.Cmd {
 	return func() tea.Msg {
 		output := make(chan string)
-		go v.client.RunCommand(fmt.Sprintf("%v %v", command, identifier), output)
+		go v.client.RunCommandInDir(fmt.Sprintf("%v %v", command, identifier), home, output)
 		return streamMsg(output)
 	}
 }
