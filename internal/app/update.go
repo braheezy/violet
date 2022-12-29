@@ -172,7 +172,13 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			content += string(value) + "\n"
 		}
 		v.vagrantOutputView.viewport.SetContent(content)
+
+	case ecosystemErrMsg:
+		v.vagrantOutputView.viewport.SetContent(msg.Error())
+	case statusErrMsg:
+		v.vagrantOutputView.viewport.SetContent(msg.Error())
 	}
+
 	var vpCmd tea.Cmd
 	v.vagrantOutputView.viewport, vpCmd = v.vagrantOutputView.viewport.Update(msg)
 
