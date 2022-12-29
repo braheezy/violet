@@ -115,7 +115,7 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				v.focus = environmentView
 			}
 		case key.Matches(msg, v.keys.Execute):
-			return v, v.Execute(v.selectedCommand)
+			break
 		case key.Matches(msg, v.keys.Help):
 			v.help.ShowAll = !v.help.ShowAll
 		case key.Matches(msg, v.keys.Quit):
@@ -134,9 +134,35 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case ecosystemMsg:
-		v.ecosystem = Ecosystem(msg)
+		eco := Ecosystem(msg)
+		var statusCmds []tea.Cmd
+		for _, env := range eco.environments {
+			for _, vm := range env.VMs {
+				statusCmds = append(statusCmds, v.getVMStatus(vm.machineID))
+			}
+		}
+		v.ecosystem = eco
+		return v, tea.Batch(statusCmds...)
 
-	case executeMsg:
+	case statusMsg:
+
+		for i, env := range v.ecosystem.environments {
+			for j, vm := range env.VMs {
+				if msg.identifier == vm.machineID || msg.identifier == vm.name {
+					// Status msgs don't return some info so retain existing info
+					updatedVM := VM{
+						machineID: vm.machineID,
+						provider:  msg.status.Fields["provider-name"],
+						state:     msg.status.Fields["state"],
+						home:      vm.home,
+						name:      msg.status.Name,
+					}
+					v.ecosystem.environments[i].VMs[j] = updatedVM
+				}
+			}
+		}
+
+	case streamMsg:
 		var content string
 		for value := range msg {
 			content += string(value) + "\n"

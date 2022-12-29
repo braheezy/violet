@@ -37,17 +37,11 @@ func createEcosystem(client *vagrant.VagrantClient) (Ecosystem, error) {
 	// Create the VM struct
 	var VMs []VM
 	for _, machineInfo := range results {
-		name := machineInfo.Name
-		if name == "" {
-			result := client.GetStatusForID(machineInfo.Fields["machine-id"])
-			status := vagrant.ParseVagrantOutput(result)
-			name = status[0].Name
-		}
 		vm := VM{
-			name:     name,
-			provider: machineInfo.Fields["provider-name"],
-			state:    machineInfo.Fields["state"],
-			home:     machineInfo.Fields["machine-home"],
+			machineID: machineInfo.Fields["machine-id"],
+			provider:  machineInfo.Fields["provider-name"],
+			state:     machineInfo.Fields["state"],
+			home:      machineInfo.Fields["machine-home"],
 		}
 		VMs = append(VMs, vm)
 	}
@@ -74,13 +68,37 @@ func (v Violet) Init() tea.Cmd {
 	return getInitialGlobalStatus
 }
 
-type executeMsg chan string
+type statusMsg struct {
+	identifier string
+	status     vagrant.MachineInfo
+}
 
-func (v Violet) Execute(command string) tea.Cmd {
+type statusErrMsg struct{ err error }
+
+func (e statusErrMsg) Error() string { return e.err.Error() }
+
+func (v Violet) getVMStatus(identifier string) tea.Cmd {
+	return func() tea.Msg {
+		result, err := v.client.GetStatusForID(identifier)
+
+		if err != nil {
+			return statusErrMsg{err}
+		}
+
+		return statusMsg{
+			identifier: identifier,
+			status:     vagrant.ParseVagrantOutput(result)[0],
+		}
+	}
+}
+
+type streamMsg chan string
+
+func (v Violet) streamCommandOnVM(identifier string, command string) tea.Cmd {
 	return func() tea.Msg {
 		output := make(chan string)
-		go v.client.RunCommand("global-status", output)
-		return executeMsg(output)
+		go v.client.RunCommand(fmt.Sprintf("%v %v", command, identifier), output)
+		return streamMsg(output)
 	}
 }
 

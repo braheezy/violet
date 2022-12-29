@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"math/rand"
+	"reflect"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
@@ -47,12 +48,16 @@ func (v Violet) View() string {
 	} else {
 		vmArea = fmt.Sprintf("VMs in %v environment:\n", v.ecosystem.selectedEnv.name)
 		for _, vm := range v.ecosystem.selectedEnv.VMs {
-			if vm.name == v.ecosystem.selectedEnv.selectedVM.name {
+			if reflect.DeepEqual(&vm, v.ecosystem.selectedEnv.selectedVM) {
 				vmArea += "\t[x] "
 			} else {
 				vmArea += "\t[ ] "
 			}
-			vmArea += strings.Join([]string{vm.name, vm.provider, vm.state}, " ")
+			displayName := vm.name
+			if displayName == "" {
+				displayName = vm.machineID
+			}
+			vmArea += strings.Join([]string{displayName, vm.provider, vm.state}, " ")
 			vmArea += "\n"
 		}
 	}
@@ -84,6 +89,9 @@ func (v Violet) View() string {
 	outputView := "Vagrant Output:\n"
 	if v.vagrantOutputView.hasContent() {
 		outputView += v.vagrantOutputView.viewport.View()
+	} else {
+		// Reserve the whitespace anyway
+		outputView += strings.Repeat("\n", outputWidth)
 	}
 	view += outputView
 	view += "\n\n"

@@ -45,11 +45,11 @@ type Environment struct {
 // **************************************************************************
 // VM contains all the data and actions associated with a specific VM
 type VM struct {
-	name     string
-	provider string
-	state    string
-	home     string
-	// Other VM properties...
+	name      string
+	provider  string
+	state     string
+	home      string
+	machineID string
 }
 
 // **************************************************************************

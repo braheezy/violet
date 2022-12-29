@@ -51,7 +51,7 @@ func TestRunCommand(t *testing.T) {
 		output := make(chan string)
 		go client.RunCommand("global-status", output)
 
-		result := readChanToString(output)
+		result := ReadChanToString(output)
 
 		require.Greater(t, len(result), 40)
 	})
@@ -77,7 +77,7 @@ func TestGetStatusForID(t *testing.T) {
 		{
 			name:      "Test bad ID",
 			input:     "fake",
-			expected:  "error",
+			expected:  "",
 			wantError: true,
 		},
 		{
@@ -87,8 +87,11 @@ func TestGetStatusForID(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		result := client.GetStatusForID(test.input)
+		result, err := client.GetStatusForID(test.input)
 		require.Contains(t, result, test.expected)
+		if test.wantError {
+			require.Error(t, err)
+		}
 	}
 }
 func TestParseVagrantOutput_Status(t *testing.T) {

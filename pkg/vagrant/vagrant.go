@@ -20,7 +20,6 @@ type VagrantClient struct {
 }
 
 func NewVagrantClient() (*VagrantClient, error) {
-
 	execPath, err := exec.LookPath("vagrant")
 	if err != nil {
 		return nil, errors.New("vagrant binary not found in PATH")
@@ -54,7 +53,7 @@ func (c *VagrantClient) GetVersion() (string, error) {
 	return version, nil
 }
 
-func readChanToString(channel chan string) (result string) {
+func ReadChanToString(channel chan string) (result string) {
 	for value := range channel {
 		result += string(value) + "\n"
 	}
@@ -65,19 +64,23 @@ func (c *VagrantClient) GetGlobalStatus() string {
 	output := make(chan string)
 	go c.RunCommand("global-status --machine-readable", output)
 
-	result := readChanToString(output)
+	result := ReadChanToString(output)
 	return result
-
 }
-func (c *VagrantClient) GetStatusForID(machineID string) string {
+
+func (c *VagrantClient) GetStatusForID(machineID string) (string, error) {
 	output := make(chan string)
 	go c.RunCommand(fmt.Sprintf("status %v --machine-readable", machineID), output)
 
-	result := readChanToString(output)
-	return result
+	result := ReadChanToString(output)
+
+	if strings.Contains(result, "Error") {
+		return "", errors.New(result)
+	}
+	return result, nil
 }
 
-// Runs a Vagrant command and returns the result.
+// Runs a Vagrant command and stream the result back to caller over channel
 func (c *VagrantClient) RunCommand(command string, outputCh chan string) {
 	defer close(outputCh)
 	// Create the Vagrant command and capture its output
