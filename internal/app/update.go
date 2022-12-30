@@ -117,7 +117,7 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, v.keys.Execute):
 			return v, v.streamCommandOnVM(
 				v.selectedCommand,
-				v.ecosystem.selectedEnv.selectedVM.name,
+				v.ecosystem.selectedEnv.selectedVM.machineID,
 				v.ecosystem.selectedEnv.selectedVM.home,
 			)
 		case key.Matches(msg, v.keys.Help):
