@@ -57,19 +57,6 @@ func TestRunCommand(t *testing.T) {
 	})
 }
 
-func TestRunCommandInDir(t *testing.T) {
-	client, _ := NewVagrantClient()
-
-	t.Run("Verify a valid Vagrant command in a directory", func(t *testing.T) {
-		output := make(chan string)
-		go client.RunCommandInDir("global-status", "/tmp", output)
-
-		result := ReadChanToString(output)
-
-		require.Greater(t, len(result), 40)
-	})
-}
-
 func TestGetGlobalStatus(t *testing.T) {
 	client, _ := NewVagrantClient()
 
@@ -170,52 +157,52 @@ func TestParseVagrantOutput_GlobalStatus(t *testing.T) {
 		input    string
 		expected []MachineInfo
 	}{
-		// {
-		// 	name: "Verify empty status",
-		// 	input: `1,,metadata,machine-count,0
-		// 	2,,ui,info,id
-		// 	3,,ui,info,name
-		// 	4,,ui,info,provider
-		// 	4,,ui,info,state
-		// 	5,,ui,info,directory
-		// 	6,,ui,info,
-		// 	7,,ui,info,--------------------------------------------------------------------
-		// 	8,,ui,info,There are no active Vagrant environments on this computer! Or%!(VAGRANT_COMMA)\nyou haven't destroyed and recreated Vagrant environments that were\nstarted with an older version of Vagrant.`,
-		// 	expected: nil,
-		// },
-		// {
-		// 	name: "Verify single status",
-		// 	input: `1671330325,,metadata,machine-count,1
-		// 	1671330325,,machine-id,c03b277
-		// 	1671330325,,provider-name,libvirt
-		// 	1671330325,,machine-home,/home/braheezy/prettybox/runners
-		// 	1671330325,,state,shutoff
-		// 	1671330325,,ui,info,id
-		// 	1671330325,,ui,info,name
-		// 	1671330325,,ui,info,provider
-		// 	1671330325,,ui,info,state
-		// 	1671330325,,ui,info,directory
-		// 	1671330325,,ui,info,
-		// 	1671330325,,ui,info,--------------------------------------------------------------------------
-		// 	1671330325,,ui,info,c03b277
-		// 	1671330325,,ui,info,builder-f35
-		// 	1671330325,,ui,info,libvirt
-		// 	1671330325,,ui,info,shutoff
-		// 	1671330325,,ui,info,/home/braheezy/prettybox/runners
-		// 	1671330325,,ui,info,
-		// 	1671330325,,ui,info, \nThe above shows information about all known Vagrant environments\non this machine. This data is cached and may not be completely\nup-to-date (use "vagrant global-status --prune" to prune invalid\nentries). To interact with any of the machines%!(VAGRANT_COMMA) you can go to that\ndirectory and run Vagrant%!(VAGRANT_COMMA) or you can use the ID directly with\nVagrant commands from any directory. For example:\n"vagrant destroy 1a2b3c4d"`,
-		// 	expected: []MachineInfo{
-		// 		{
-		// 			Name: "",
-		// 			Fields: map[string]string{
-		// 				"provider-name": "libvirt",
-		// 				"state":         "shutoff",
-		// 				"machine-home":  "/home/braheezy/prettybox/runners",
-		// 				"machine-id":    "c03b277",
-		// 			},
-		// 		},
-		// 	},
-		// },
+		{
+			name: "Verify empty status",
+			input: `1,,metadata,machine-count,0
+			2,,ui,info,id
+			3,,ui,info,name
+			4,,ui,info,provider
+			4,,ui,info,state
+			5,,ui,info,directory
+			6,,ui,info,
+			7,,ui,info,--------------------------------------------------------------------
+			8,,ui,info,There are no active Vagrant environments on this computer! Or%!(VAGRANT_COMMA)\nyou haven't destroyed and recreated Vagrant environments that were\nstarted with an older version of Vagrant.`,
+			expected: nil,
+		},
+		{
+			name: "Verify single status",
+			input: `1671330325,,metadata,machine-count,1
+			1671330325,,machine-id,c03b277
+			1671330325,,provider-name,libvirt
+			1671330325,,machine-home,/home/braheezy/prettybox/runners
+			1671330325,,state,shutoff
+			1671330325,,ui,info,id
+			1671330325,,ui,info,name
+			1671330325,,ui,info,provider
+			1671330325,,ui,info,state
+			1671330325,,ui,info,directory
+			1671330325,,ui,info,
+			1671330325,,ui,info,--------------------------------------------------------------------------
+			1671330325,,ui,info,c03b277
+			1671330325,,ui,info,builder-f35
+			1671330325,,ui,info,libvirt
+			1671330325,,ui,info,shutoff
+			1671330325,,ui,info,/home/braheezy/prettybox/runners
+			1671330325,,ui,info,
+			1671330325,,ui,info, \nThe above shows information about all known Vagrant environments\non this machine. This data is cached and may not be completely\nup-to-date (use "vagrant global-status --prune" to prune invalid\nentries). To interact with any of the machines%!(VAGRANT_COMMA) you can go to that\ndirectory and run Vagrant%!(VAGRANT_COMMA) or you can use the ID directly with\nVagrant commands from any directory. For example:\n"vagrant destroy 1a2b3c4d"`,
+			expected: []MachineInfo{
+				{
+					Name: "",
+					Fields: map[string]string{
+						"provider-name": "libvirt",
+						"state":         "shutoff",
+						"machine-home":  "/home/braheezy/prettybox/runners",
+						"machine-id":    "c03b277",
+					},
+				},
+			},
+		},
 		{
 			name: "Verify multi status",
 			input: `1672263560,,metadata,machine-count,3

@@ -85,18 +85,6 @@ func (c *VagrantClient) RunCommand(command string, outputCh chan string) {
 	cmd := exec.Command(c.ExecPath, strings.Split(command, " ")...)
 	cmd.Env = c.Env
 
-	c.execute(cmd, outputCh)
-}
-
-// Run a Vagrant command in a specific directory and stream the result back to caller over outputCh
-func (c *VagrantClient) RunCommandInDir(command string, directory string, outputCh chan string) {
-	cmd := exec.Command(c.ExecPath, strings.Split(command, " ")...)
-	cmd.Env = c.Env
-	cmd.Dir = directory
-
-	c.execute(cmd, outputCh)
-}
-func (c *VagrantClient) execute(cmd *exec.Cmd, outputCh chan string) {
 	defer close(outputCh)
 
 	stdout, err := cmd.StdoutPipe()
@@ -127,7 +115,6 @@ func (c *VagrantClient) execute(cmd *exec.Cmd, outputCh chan string) {
 	if err != nil {
 		outputCh <- string(fmt.Sprintf("Error waiting for the script to complete: %v", err))
 	}
-
 }
 
 // **************************************************************************
