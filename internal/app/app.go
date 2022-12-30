@@ -8,6 +8,7 @@ import (
 
 	"github.com/braheezy/violet/pkg/vagrant"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type ecosystemMsg Ecosystem
@@ -97,7 +98,7 @@ type streamMsg chan string
 func (v Violet) streamCommandOnVM(command string, identifier string, home string) tea.Cmd {
 	return func() tea.Msg {
 		output := make(chan string)
-		go v.client.RunCommandInDir(fmt.Sprintf("%v %v", command, identifier), home, output)
+		go v.client.RunCommand(fmt.Sprintf("%v %v", command, identifier), output)
 		return streamMsg(output)
 	}
 }
@@ -110,6 +111,12 @@ func Run() {
 		} else {
 			defer f.Close()
 		}
+	}
+	// Set the color palette for the application.
+	if lipgloss.HasDarkBackground() {
+		theme = defaultDarkTheme
+	} else {
+		theme = defaultLightTheme
 	}
 	if _, err := tea.NewProgram(newViolet()).Run(); err != nil {
 		log.Fatalf("Could not start program :(\n%v\n", err)

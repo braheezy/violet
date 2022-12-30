@@ -1,6 +1,13 @@
 package app
 
-import "github.com/charmbracelet/lipgloss"
+import (
+	"github.com/charmbracelet/lipgloss"
+	tint "github.com/lrstanley/bubbletint"
+)
+
+var defaultDarkTheme = tint.TintMaterialDark
+var defaultLightTheme = tint.TintMaterial
+var theme = defaultDarkTheme
 
 var (
 	focusedStyle = lipgloss.NewStyle().
@@ -9,11 +16,17 @@ var (
 
 	commandSelectStyle = lipgloss.NewStyle().
 				Bold(true).
-				Foreground(lipgloss.Color("69"))
-	outputHeight    = 70
-	outputWidth     = 9
+				Foreground(theme.BrightBlue())
+
+	outputHeight    = 10
+	outputWidth     = 70
 	outputViewStyle = lipgloss.NewStyle().
 			Border(lipgloss.NormalBorder(), true).
-			BorderForeground(lipgloss.Color("#cba6f7")).
+			BorderForeground(theme.Fg()).
 			MarginLeft(2)
+
+	titleStyle = lipgloss.NewStyle().
+			Bold(true).
+			Italic(true).
+			Foreground(theme.BrightPurple())
 )

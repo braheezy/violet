@@ -19,9 +19,16 @@ func (v Violet) View() string {
 	view := ""
 
 	// Title view area
-	title := "Violet"
-	greeter := "A splash of color for vagrant " + randomEmoji()
+	title := `
+	██╗░░░██╗██╗░█████╗░██╗░░░░░███████╗████████╗
+	██║░░░██║██║██╔══██╗██║░░░░░██╔════╝╚══██╔══╝
+	╚██╗░██╔╝██║██║░░██║██║░░░░░█████╗░░░░░██║░░░
+	░╚████╔╝░██║██║░░██║██║░░░░░██╔══╝░░░░░██║░░░
+	░░╚██╔╝░░██║╚█████╔╝███████╗███████╗░░░██║░░░
+	░░░╚═╝░░░╚═╝░╚════╝░╚══════╝╚══════╝░░░╚═╝░░░​​​​​`
+	greeter := "Pretty manager for Vagrant " + randomEmoji()
 	view += lipgloss.JoinVertical(lipgloss.Center, title, greeter)
+	view = titleStyle.Render(view)
 	view += "\n\n"
 
 	// Show the current environments
@@ -91,7 +98,7 @@ func (v Violet) View() string {
 		outputView += v.vagrantOutputView.viewport.View()
 	} else {
 		// Reserve the whitespace anyway
-		outputView += strings.Repeat("\n", outputWidth)
+		outputView += strings.Repeat("\n", outputHeight)
 	}
 	view += outputView
 	view += "\n\n"
