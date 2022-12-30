@@ -111,7 +111,7 @@ func newViolet() Violet {
 	help := help.New()
 	help.ShowAll = true
 
-	vagrantOutputView := viewport.New(outputHeight, outputWidth)
+	vagrantOutputView := viewport.New(outputWidth, outputHeight)
 	vagrantOutputView.Style = outputViewStyle
 
 	return Violet{
