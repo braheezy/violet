@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/braheezy/violet/pkg/vagrant"
 	tea "github.com/charmbracelet/bubbletea"
@@ -42,7 +43,7 @@ func createEcosystem(client *vagrant.VagrantClient) (Ecosystem, error) {
 		vm := VM{
 			machineID: machineInfo.Fields["machine-id"],
 			provider:  machineInfo.Fields["provider-name"],
-			state:     machineInfo.Fields["state"],
+			state:     strings.Replace(machineInfo.Fields["state"], "_", " ", -1),
 			home:      machineInfo.Fields["machine-home"],
 		}
 		VMs = append(VMs, vm)
@@ -90,9 +91,12 @@ func (v Violet) getVMStatus(identifier string) tea.Cmd {
 			return statusErrMsg{err}
 		}
 
+		vmStatus := vagrant.ParseVagrantOutput(result)[0]
+		vmStatus.Fields["state"] = strings.Replace(vmStatus.Fields["state"], "_", " ", -1)
+
 		return statusMsg{
 			identifier: identifier,
-			status:     vagrant.ParseVagrantOutput(result)[0],
+			status:     vmStatus,
 		}
 	}
 }
