@@ -11,6 +11,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+// Updates for the entire ecosystem. Usually with results from `global-status`
 type ecosystemMsg Ecosystem
 
 type ecosystemErrMsg struct{ err error }
@@ -54,24 +55,27 @@ func createEcosystem(client *vagrant.VagrantClient) (Ecosystem, error) {
 	var environments []Environment
 	for envName, vms := range envGroups {
 		env := Environment{
-			name:       envName,
-			VMs:        vms,
-			selectedVM: &vms[0],
+			name: envName,
+			VMs:  vms,
 		}
 		environments = append(environments, env)
 	}
 	return Ecosystem{
 		environments: environments,
-		selectedEnv:  &environments[0],
+		client:       client,
 	}, nil
 }
+
 func (v Violet) Init() tea.Cmd {
 	return getInitialGlobalStatus
 }
 
+// Status messages get emitted on a per-VM basis
 type statusMsg struct {
+	// identifier is the name or machine-id for this status info
 	identifier string
-	status     vagrant.MachineInfo
+	// Resultant status about machine
+	status vagrant.MachineInfo
 }
 
 type statusErrMsg struct{ err error }
@@ -80,7 +84,7 @@ func (e statusErrMsg) Error() string { return e.err.Error() }
 
 func (v Violet) getVMStatus(identifier string) tea.Cmd {
 	return func() tea.Msg {
-		result, err := v.client.GetStatusForID(identifier)
+		result, err := v.ecosystem.client.GetStatusForID(identifier)
 
 		if err != nil {
 			return statusErrMsg{err}
@@ -95,10 +99,11 @@ func (v Violet) getVMStatus(identifier string) tea.Cmd {
 
 type streamMsg chan string
 
-func (v Violet) streamCommandOnVM(command string, identifier string, home string) tea.Cmd {
+// TODO: This doesn't actually stream the output back in realtime. Why not?
+func (v Violet) streamCommandOnVM(command string, identifier string) tea.Cmd {
 	return func() tea.Msg {
 		output := make(chan string)
-		go v.client.RunCommand(fmt.Sprintf("%v %v", command, identifier), output)
+		go v.ecosystem.client.RunCommand(fmt.Sprintf("%v %v", command, identifier), output)
 		return streamMsg(output)
 	}
 }

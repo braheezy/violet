@@ -5,23 +5,24 @@ import (
 
 	"github.com/braheezy/violet/pkg/vagrant"
 	"github.com/charmbracelet/bubbles/help"
-	"github.com/charmbracelet/bubbles/textinput"
+	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/viewport"
+	"github.com/charmbracelet/lipgloss"
 )
+
+var supportedVagrantCommands = []string{"up", "halt", "reload", "provision"}
 
 // **************************************************************************
 //
 //	Ecosystem Model
 //
 // **************************************************************************
-// Ecosystem provides a single pane into all Environments
+// Ecosystem contains the total Vagrant world information
 type Ecosystem struct {
+	// Collection of all Vagrant environments
 	environments []Environment
-	selectedEnv  *Environment
-}
-
-func (d *Ecosystem) UpdateEnvs(envs []Environment) {
-	d.environments = envs
+	// Reference to a Vagrant client to run commands with
+	client *vagrant.VagrantClient
 }
 
 // **************************************************************************
@@ -31,11 +32,10 @@ func (d *Ecosystem) UpdateEnvs(envs []Environment) {
 // **************************************************************************
 // Environment represents a single Vagrant project
 type Environment struct {
-	// A friendly name for the Environment
+	// Friendly name for the Environment
 	name string
 	// Environments have 0 or more VMs
-	VMs        []VM
-	selectedVM *VM
+	VMs []VM
 }
 
 // **************************************************************************
@@ -45,11 +45,32 @@ type Environment struct {
 // **************************************************************************
 // VM contains all the data and actions associated with a specific VM
 type VM struct {
-	name      string
-	provider  string
-	state     string
-	home      string
-	machineID string
+	name            string
+	provider        string
+	state           string
+	home            string
+	machineID       string
+	selectedCommand int
+}
+
+func (vm *VM) View() string {
+	displayName := vm.name
+	if displayName == "" {
+		displayName = vm.machineID
+	}
+
+	// displayName = turnBig(displayName)
+
+	content := lipgloss.JoinVertical(
+		lipgloss.Left,
+		cardTitleStyle.Render(displayName),
+		cardStatusStyle.Foreground(statusColors[vm.state]).Render(vm.state),
+		cardProviderStyle.Render(vm.provider),
+	)
+
+	return content
+
+	// return strings.Join([]string{displayName, vm.provider, vm.state}, " ")
 }
 
 // **************************************************************************
@@ -57,16 +78,6 @@ type VM struct {
 //	Violet Model
 //
 // **************************************************************************
-// focusState is used to track which model is focused
-type focusState uint
-
-// Enumerate available areas the user can focus
-const (
-	environmentView focusState = iota
-	vmView
-	commandView
-)
-
 type outputViewport struct {
 	viewport viewport.Model
 }
@@ -84,19 +95,13 @@ type Violet struct {
 	// Fancy help bubble
 	help help.Model
 	// To support help
-	keys helpKeyMap
-	// User input to Vagrant terminal
-	textInput textinput.Model
-	// The currently selected view
-	focus focusState
-	// A copy of the Vagrant client to share around
-	client *vagrant.VagrantClient
-	// The Vagrant commands that Violet can run
-	supportedCommands []string
-	// Currently selected Vagrant command to run
-	selectedCommand string
+	keys        helpKeyMap
+	selectedEnv int
+	selectedVM  int
 	// The viewport to view Vagrant output
 	vagrantOutputView outputViewport
+	commandButtons    buttonGroup
+	spinner           currentSpinner
 }
 
 func newViolet() Violet {
@@ -104,9 +109,6 @@ func newViolet() Violet {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	textInput := textinput.New()
-	textInput.Placeholder = "Send text to the terminal running Vagrant..."
 
 	help := help.New()
 	help.ShowAll = true
@@ -117,15 +119,35 @@ func newViolet() Violet {
 	return Violet{
 		ecosystem: Ecosystem{
 			environments: nil,
-			selectedEnv:  nil,
+			client:       client,
 		},
 		keys:              keys,
 		help:              help,
-		textInput:         textInput,
-		focus:             environmentView,
-		client:            client,
-		supportedCommands: []string{"up", "halt", "provision", "ssh"},
-		selectedCommand:   "up",
+		selectedEnv:       0,
+		selectedVM:        0,
 		vagrantOutputView: outputViewport{vagrantOutputView},
+		commandButtons:    newCommandButtons(),
+		spinner:           newSpinner(),
+	}
+}
+
+func (v *Violet) getCurrentVM() *VM {
+	return &v.ecosystem.environments[v.selectedEnv].VMs[v.selectedVM]
+}
+
+type currentSpinner struct {
+	spinner spinner.Model
+	show    bool
+	title   string
+}
+
+func newSpinner() currentSpinner {
+	s := spinner.New()
+	s.Spinner = spinners[0]
+	// s.Style = spinnerStyle
+	return currentSpinner{
+		spinner: s,
+		show:    false,
+		title:   "",
 	}
 }
