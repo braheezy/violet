@@ -8,7 +8,8 @@ var (
 			Foreground(primaryColor).
 			MarginBottom(1)
 	cardStatusStyle = lipgloss.NewStyle().
-			PaddingLeft(1)
+			PaddingLeft(1).
+			Width(12)
 	statusColors = map[string]lipgloss.TerminalColor{
 		"running":     theme.BrightGreen(),
 		"shutoff":     theme.BrightRed(),

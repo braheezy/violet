@@ -3,11 +3,9 @@ package app
 import (
 	"fmt"
 	"math/rand"
-	"os"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
-	"golang.org/x/term"
 )
 
 func randomEmoji() string {
@@ -16,7 +14,6 @@ func randomEmoji() string {
 }
 
 func (v Violet) View() string {
-	physicalWidth, _, _ := term.GetSize(int(os.Stdout.Fd()))
 	// Build up final view
 	view := ""
 
@@ -39,6 +36,21 @@ func (v Violet) View() string {
 	if v.ecosystem.environments == nil {
 		envArea += "No environments found :("
 	} else {
+		vmCards := []string{}
+		commandWidth := 0
+		for i, vm := range v.ecosystem.environments[v.selectedEnv].VMs {
+			vmInfo := vm.View()
+			commands := v.commandButtons.View(vm.selectedCommand)
+			commandWidth = v.commandButtons.width
+			cardInfo := lipgloss.JoinHorizontal(lipgloss.Center, vmInfo, commands)
+			if i == v.selectedVM {
+				cardInfo = selectedCardStyle.Render(cardInfo)
+			}
+			vmCards = append(vmCards, cardInfo)
+		}
+
+		tabContent := strings.Join(vmCards, "\n")
+
 		// Create tabs
 		var titleTabs []string
 		for i, env := range v.ecosystem.environments {
@@ -59,21 +71,8 @@ func (v Violet) View() string {
 			titleTabs = append(titleTabs, style.Render(env.name))
 		}
 		tabTitleRow := lipgloss.JoinHorizontal(lipgloss.Top, titleTabs...)
-		gap := tabGapStyle.Render(strings.Repeat(" ", max(0, physicalWidth-lipgloss.Width(tabTitleRow))-7))
+		gap := tabGapStyle.Render(strings.Repeat(" ", commandWidth*2))
 		tabTitle := lipgloss.JoinHorizontal(lipgloss.Bottom, tabTitleRow, gap)
-
-		vmCards := []string{}
-		for i, vm := range v.ecosystem.environments[v.selectedEnv].VMs {
-			vmInfo := vm.View()
-			commands := v.commandButtons.View(vm.selectedCommand)
-			cardInfo := lipgloss.JoinHorizontal(lipgloss.Center, vmInfo, commands)
-			if i == v.selectedVM {
-				cardInfo = selectedCardStyle.Render(cardInfo)
-			}
-			vmCards = append(vmCards, cardInfo)
-		}
-
-		tabContent := strings.Join(vmCards, "\n")
 
 		// Not rendering the top left corder of window border, account for it with magic 2
 		tabWindowStyle = tabWindowStyle.Width(lipgloss.Width(tabTitle) - 2)

@@ -56,7 +56,7 @@ var (
 			Border(gapBorder)
 	tabWindowStyle = lipgloss.NewStyle().
 			BorderForeground(highlightColor).
-			Padding(1, 2).
+			Padding(1, 1).
 			Border(lipgloss.RoundedBorder()).
 			UnsetBorderTop()
 )

@@ -16,7 +16,7 @@ var (
 				Background(primaryColor).
 				Bold(true)
 	buttonGroupStyle = lipgloss.NewStyle().
-				MarginLeft(20).
+				MarginLeft(12).
 				Padding(1)
 )
 
@@ -31,6 +31,7 @@ func (b *button) View() string {
 
 type buttonGroup struct {
 	buttons []button
+	width   int
 	// activeButton int
 }
 
@@ -51,7 +52,7 @@ func newCommandButtons() buttonGroup {
 
 	return buttonGroup{
 		buttons: buttons,
-		// activeButton: 0,
+		width:   longestCommand * 2,
 	}
 }
 
