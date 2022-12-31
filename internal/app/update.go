@@ -165,11 +165,7 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case streamMsg:
-		var content string
-		for value := range msg {
-			content += string(value) + "\n"
-		}
-		v.vagrantOutputView.viewport.SetContent(content)
+		v.vagrantOutputView.viewport.SetContent(string(msg))
 		v.spinner.show = false
 		return v, v.getVMStatus(v.getCurrentVM().machineID)
 

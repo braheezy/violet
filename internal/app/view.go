@@ -82,46 +82,6 @@ func (v Violet) View() string {
 	view += envArea
 	view += "\n\n"
 
-	// Show VMs for the selected environment
-	// vmArea := ""
-	// if v.ecosystem.selectedEnv == nil {
-	// 	vmArea = "\n"
-	// } else {
-	// 	vmArea = fmt.Sprintf("VMs in %v environment:\n", v.ecosystem.selectedEnv.name)
-	// 	for _, vm := range v.ecosystem.selectedEnv.VMs {
-	// 		if reflect.DeepEqual(&vm, v.ecosystem.selectedEnv.selectedVM) {
-	// 			vmArea += "\t[x] "
-	// 		} else {
-	// 			vmArea += "\t[ ] "
-	// 		}
-	// 		displayName := vm.name
-	// 		if displayName == "" {
-	// 			displayName = vm.machineID
-	// 		}
-	// 		vmArea += strings.Join([]string{displayName, vm.provider, vm.state}, " ")
-	// 		vmArea += "\n"
-	// 	}
-	// }
-
-	// if v.focus == vmView {
-	// 	view += focusedStyle.Render(vmArea)
-	// } else {
-	// 	view += vmArea
-	// }
-	// view += "\n\n"
-
-	// The available commands to run on selected VM
-	// commandArea := "Commands:\n\t"
-	// for _, cmd := range v.supportedCommands {
-	// 	if v.selectedCommand == cmd {
-	// 		commandArea += commandSelectStyle.Render(cmd + "\t")
-	// 	} else {
-	// 		commandArea += cmd + "\t"
-	// 	}
-	// }
-	// view += commandArea
-	// view += "\n\n"
-
 	// Area to view output from Vagrant commands
 	outputView := "Vagrant Output:\n"
 	if v.spinner.show {

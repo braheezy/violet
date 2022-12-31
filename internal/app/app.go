@@ -97,14 +97,18 @@ func (v Violet) getVMStatus(identifier string) tea.Cmd {
 	}
 }
 
-type streamMsg chan string
+type streamMsg string
 
 // TODO: This doesn't actually stream the output back in realtime. Why not?
 func (v Violet) streamCommandOnVM(command string, identifier string) tea.Cmd {
 	return func() tea.Msg {
 		output := make(chan string)
 		go v.ecosystem.client.RunCommand(fmt.Sprintf("%v %v", command, identifier), output)
-		return streamMsg(output)
+		var content string
+		for value := range output {
+			content += string(value) + "\n"
+		}
+		return streamMsg(content)
 	}
 }
 
