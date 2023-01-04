@@ -3,6 +3,8 @@ Give [Vagrant](https://developer.hashicorp.com/vagrant) a splash of color :art:
 
 Violet is a colorful TUI frontend to manage Vagrant virtual machines. Quickly view the state of all VMs and issue commands against them!
 
+![Violet Gif](./assets/demo.gif)
+
 ## Project Status
 Violet is in early stages of development and is not recommended for production use cases. It probably handles most error cases poorly. It hardly cares about terminal types and sizes.
 
