@@ -1,60 +1,71 @@
 Output demo.gif
 
 Set FontSize 12
-Set Height 700
-Set Width 600
+Set Height 1000
+Set Width 700
 
 Sleep 1s
 Type "make run"
 Enter
-Sleep 5s
-# Show Switching views
+Sleep 7s
+# Show switching tabs
 Tab
 Sleep 1s
 Tab
 Sleep 1s
 Tab
 Sleep 1s
-# Show env area
+# Show switching VMs
 Right
 Sleep 1s
 Right
 Sleep 1s
 Right
 Sleep 1s
-# Show vm area
+Left
+Sleep 1s
+Right
+Sleep 1s
+# Show selecting commands
+Type "2"
+Sleep 1s
+Type "3"
+Sleep 1s
+Type "4"
+Sleep 1s
+Type "2"
+Sleep 1s
+Right
+Sleep 1s
+Type "3"
+Sleep 1s
+Right
+Sleep 500ms
+Right
+Sleep 500ms
+# Show commands remembered after switching tabs
 Tab
-Sleep 2s
-Right
 Sleep 1s
-Right
-Sleep 1s
-Right
-Sleep 1s
-# Show command area
-Right
-Sleep 2s
-Right
-Sleep 1s
-Right
-Sleep 1s
-Right
+Tab
 Sleep 1s
 # Run command
+# Halt
 Enter
-Sleep 15s
-Down
-Down
-Sleep 2s
-Up
-Up
-Sleep 2s
-Tab
-Tab
-Sleep 1s
-Up
-Sleep 1s
+Sleep 10s
+# Up
 Enter
-Sleep 6s
+Sleep 10s
+Down
+Sleep 500ms
+Down
+Sleep 500ms
+Down
+Sleep 500ms
+Up
+Sleep 500ms
+Up
+Sleep 500ms
+Up
+Sleep 500ms
 Type "q"
 Sleep 1s
