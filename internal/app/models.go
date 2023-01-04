@@ -5,18 +5,12 @@ import (
 
 	"github.com/braheezy/violet/pkg/vagrant"
 	"github.com/charmbracelet/bubbles/help"
-	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/viewport"
 	"github.com/charmbracelet/lipgloss"
 )
 
 var supportedVagrantCommands = []string{"up", "halt", "reload", "provision"}
 
-// **************************************************************************
-//
-//	Ecosystem Model
-//
-// **************************************************************************
 // Ecosystem contains the total Vagrant world information
 type Ecosystem struct {
 	// Collection of all Vagrant environments
@@ -25,11 +19,6 @@ type Ecosystem struct {
 	client *vagrant.VagrantClient
 }
 
-// **************************************************************************
-//
-//	Environment Model
-//
-// **************************************************************************
 // Environment represents a single Vagrant project
 type Environment struct {
 	// Friendly name for the Environment
@@ -38,29 +27,25 @@ type Environment struct {
 	VMs []VM
 }
 
-// **************************************************************************
-//
-//	VM Model
-//
-// **************************************************************************
 // VM contains all the data and actions associated with a specific VM
 type VM struct {
-	name            string
-	provider        string
-	state           string
-	home            string
-	machineID       string
+	name      string
+	provider  string
+	state     string
+	home      string
+	machineID string
+	// The currently selected command to run on the VM.
 	selectedCommand int
 }
 
 func (vm *VM) View() string {
 	displayName := vm.name
+	// If there's no name yet, at least show the machine-id
 	if displayName == "" {
 		displayName = vm.machineID
 	}
 
-	// displayName = turnBig(displayName)
-
+	// Join the VM info for the card view
 	content := lipgloss.JoinVertical(
 		lipgloss.Left,
 		cardTitleStyle.Render(displayName),
@@ -69,19 +54,15 @@ func (vm *VM) View() string {
 	)
 
 	return content
-
-	// return strings.Join([]string{displayName, vm.provider, vm.state}, " ")
 }
 
-// **************************************************************************
-//
-//	Violet Model
-//
-// **************************************************************************
+// The view area for Vagrant output
 type outputViewport struct {
 	viewport viewport.Model
 }
 
+// True if the viewport has stuff to show.
+// Guesstimated...
 func (o *outputViewport) hasContent() bool {
 	currentSize := len(o.viewport.View())
 	defaultSize := outputHeight * outputWidth
@@ -95,15 +76,19 @@ type Violet struct {
 	// Fancy help bubble
 	help help.Model
 	// To support help
-	keys        helpKeyMap
+	keys helpKeyMap
+	// Indexes of the respective lists that are currently selected.
 	selectedEnv int
 	selectedVM  int
-	// The viewport to view Vagrant output
+	// Viewport to view Vagrant output
 	vagrantOutputView outputViewport
-	commandButtons    buttonGroup
-	spinner           currentSpinner
+	// Buttons to allow the user to run commands
+	commandButtons buttonGroup
+	// Spinner to show while commands are running
+	spinner currentSpinner
 }
 
+// Return the default Violet model
 func newViolet() Violet {
 	client, err := vagrant.NewVagrantClient()
 	if err != nil {
@@ -131,23 +116,7 @@ func newViolet() Violet {
 	}
 }
 
+// Simple helper to get the specific VM the user is interacting with
 func (v *Violet) getCurrentVM() *VM {
 	return &v.ecosystem.environments[v.selectedEnv].VMs[v.selectedVM]
-}
-
-type currentSpinner struct {
-	spinner spinner.Model
-	show    bool
-	title   string
-}
-
-func newSpinner() currentSpinner {
-	s := spinner.New()
-	s.Spinner = spinners[0]
-	// s.Style = spinnerStyle
-	return currentSpinner{
-		spinner: s,
-		show:    false,
-		title:   "",
-	}
 }

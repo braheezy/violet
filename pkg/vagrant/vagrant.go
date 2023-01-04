@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-// A Vagrant client.
+// VagrantClient know how to runs Vagrant commands
 type VagrantClient struct {
 	// The path to the Vagrant executable.
 	ExecPath string
@@ -19,6 +19,8 @@ type VagrantClient struct {
 	Env []string
 }
 
+// NewVagrantClient returns a new VagrantClient ready to run commands.
+// Return error if there's issues getting Vagrant binary.
 func NewVagrantClient() (*VagrantClient, error) {
 	execPath, err := exec.LookPath("vagrant")
 	if err != nil {
@@ -31,8 +33,8 @@ func NewVagrantClient() (*VagrantClient, error) {
 	}, nil
 }
 
-// Get the version of Vagrant.
-// NB: Good way to check things are working
+// Return the version of Vagrant.
+// NB: Good way to check VagrantClient is working
 func (c *VagrantClient) GetVersion() (string, error) {
 	cmd := exec.Command(c.ExecPath, "--version")
 	result, err := cmd.CombinedOutput()
@@ -47,12 +49,13 @@ func (c *VagrantClient) GetVersion() (string, error) {
 	if len(matches) > 0 {
 		version = matches[1]
 	} else {
-		// Did they change the format to the version?
+		// Did they change the format of the version?
 		version = "N/A"
 	}
 	return version, nil
 }
 
+// ReadChanToString is a simple helper to drain a channel into a string
 func ReadChanToString(channel chan string) (result string) {
 	for value := range channel {
 		result += string(value) + "\n"
@@ -60,6 +63,7 @@ func ReadChanToString(channel chan string) (result string) {
 	return result
 }
 
+// GetGlobalStatus
 func (c *VagrantClient) GetGlobalStatus() string {
 	output := make(chan string)
 	go c.RunCommand("global-status --machine-readable", output)

@@ -1,15 +1,16 @@
 package app
 
 import (
-	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/lipgloss"
 	tint "github.com/lrstanley/bubbletint"
 )
 
+// Tweak these to quickly change app feels
 var defaultDarkTheme = tint.TintMaterialDark
 var defaultLightTheme = tint.TintMaterial
 var theme = defaultDarkTheme
 
+// Tweak these for a different palette
 var (
 	primaryColor   = theme.BrightPurple()
 	secondaryColor = theme.Purple()
@@ -68,20 +69,3 @@ func tabBorderWithBottom(left, middle, right string) lipgloss.Border {
 	border.BottomRight = right
 	return border
 }
-
-var (
-	// Available spinners
-	spinners = []spinner.Spinner{
-		spinner.MiniDot,
-		spinner.Dot,
-		spinner.Line,
-		spinner.Jump,
-		spinner.Pulse,
-		spinner.Points,
-		spinner.Globe,
-		spinner.Moon,
-		spinner.Monkey,
-	}
-
-	spinnerStyle = lipgloss.NewStyle().Foreground(secondaryColor)
-)

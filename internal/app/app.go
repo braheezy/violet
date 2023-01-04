@@ -19,6 +19,7 @@ type ecosystemErrMsg struct{ err error }
 
 func (e ecosystemErrMsg) Error() string { return e.err.Error() }
 
+// Runs on boot to get current Vagrant status on host.
 func getInitialGlobalStatus() tea.Msg {
 	client, err := vagrant.NewVagrantClient()
 	if err != nil {
@@ -30,7 +31,10 @@ func getInitialGlobalStatus() tea.Msg {
 	}
 	return ecosystemMsg(ecosystem)
 }
+
+// Call `global-status` and translate result into a new Ecosystem
 func createEcosystem(client *vagrant.VagrantClient) (Ecosystem, error) {
+	// Fetch (not stream) the current global status
 	result := client.GetGlobalStatus()
 	var nilEcosystem Ecosystem
 	results := vagrant.ParseVagrantOutput(result)
@@ -48,9 +52,10 @@ func createEcosystem(client *vagrant.VagrantClient) (Ecosystem, error) {
 		}
 		VMs = append(VMs, vm)
 	}
+	// Create different envs by grouping VMs based on machine-home
 	envGroups := make(map[string][]VM)
 	for _, vm := range VMs {
-		// TODO: Bug if two different paths have the same folder name
+		// TODO: Bug if two different paths have the same folder name e.g. /foo/env1 and /bar/env1 will incorrectly be treated the same
 		envGroups[path.Base(vm.home)] = append(envGroups[path.Base(vm.home)], vm)
 	}
 	var environments []Environment

@@ -32,12 +32,12 @@ func (b *button) View() string {
 type buttonGroup struct {
 	buttons []button
 	width   int
-	// activeButton int
 }
 
 func newCommandButtons() buttonGroup {
 	var buttons []button
 	var longestCommand int
+	// Create buttons based on supported commands
 	for i, command := range supportedVagrantCommands {
 		content := fmt.Sprintf("%v. %v", i+1, command)
 		longestCommand = max(longestCommand, len(content))
@@ -52,7 +52,8 @@ func newCommandButtons() buttonGroup {
 
 	return buttonGroup{
 		buttons: buttons,
-		width:   longestCommand * 2,
+		// This provides excellent space for each command
+		width: longestCommand * 2,
 	}
 }
 
@@ -65,10 +66,17 @@ func (b *buttonGroup) View(selectedCommand int) string {
 		}
 	}
 
-	topRow := lipgloss.JoinVertical(lipgloss.Center, b.buttons[0].View(), b.buttons[2].View())
-	bottomRow := lipgloss.JoinVertical(lipgloss.Center, b.buttons[1].View(), b.buttons[3].View())
+	leftSide := lipgloss.JoinVertical(lipgloss.Center, b.buttons[0].View(), b.buttons[2].View())
+	rightSide := lipgloss.JoinVertical(lipgloss.Center, b.buttons[1].View(), b.buttons[3].View())
 
-	group := lipgloss.JoinHorizontal(lipgloss.Center, topRow, bottomRow)
+	group := lipgloss.JoinHorizontal(lipgloss.Center, leftSide, rightSide)
 
 	return buttonGroupStyle.Render(group)
+}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }

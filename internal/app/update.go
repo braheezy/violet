@@ -3,15 +3,13 @@ package app
 import (
 	"fmt"
 	"math/rand"
-	"reflect"
 	"strconv"
 
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-// helpKeyMap defines a set of keybindings. To work for help it must satisfy
-// key.Map. It could also very easily be a map[string]key.Binding.
+// helpKeyMap defines a set of keybindings.
 type helpKeyMap struct {
 	Up            key.Binding
 	Down          key.Binding
@@ -24,6 +22,7 @@ type helpKeyMap struct {
 	Quit          key.Binding
 }
 
+// Setup the keybinding and help text for each key
 var keys = helpKeyMap{
 	Up: key.NewBinding(
 		key.WithKeys("up", "k"),
@@ -63,8 +62,6 @@ var keys = helpKeyMap{
 	),
 }
 
-var verbs = []string{"Running", "Executing", "Performing", "Invoking", "Launching", "Casting"}
-
 // ShortHelp returns keybindings to be shown in the mini help view. It's part
 // of the key.Map interface.
 func (k helpKeyMap) ShortHelp() []key.Binding {
@@ -80,18 +77,23 @@ func (k helpKeyMap) FullHelp() [][]key.Binding {
 	}
 }
 
+var verbs = []string{"Running", "Executing", "Performing", "Invoking", "Launching", "Casting"}
+
 func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	// Window was resized
 	case tea.WindowSizeMsg:
 		// If we set a width on the help menu it can it can gracefully truncate
 		// its view as needed.
 		v.help.Width = msg.Width
 
+	// User pressed a key
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, keys.ChooseCommand):
 			selected, _ := strconv.Atoi(msg.String())
-			v.ecosystem.environments[v.selectedEnv].VMs[v.selectedVM].selectedCommand = selected - 1
+			v.getCurrentVM().selectedCommand = selected - 1
+			// v.ecosystem.environments[v.selectedEnv].VMs[v.selectedVM].selectedCommand = selected - 1
 		case key.Matches(msg, v.keys.Left):
 			if v.selectedVM == 0 {
 				v.selectedVM = len(v.ecosystem.environments[v.selectedEnv].VMs) - 1
@@ -120,7 +122,9 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				verbs[rand.Intn(len(verbs))],
 				vagrantCmd,
 				currentVM.name)
+			// This must be sent for the spinner to spin
 			tickCmd := v.spinner.spinner.Tick
+			// Run the command async and stream result back
 			streamCmd := v.streamCommandOnVM(
 				vagrantCmd,
 				currentVM.machineID,
@@ -132,6 +136,7 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return v, tea.Quit
 		}
 
+	// New data from `global-status` has come in
 	case ecosystemMsg:
 		eco := Ecosystem(msg)
 		var statusCmds []tea.Cmd
@@ -147,10 +152,13 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		return v, tea.Batch(statusCmds...)
 
+	// New data about a specific VM has come in
 	case statusMsg:
+		// Find the VM this message is about
 		for i, env := range v.ecosystem.environments {
 			for j, vm := range env.VMs {
 				if msg.identifier == vm.machineID || msg.identifier == vm.name {
+					// Found the VM this status message is about.
 					// Status msgs don't return some info so retain existing info
 					updatedVM := VM{
 						machineID: vm.machineID,
@@ -158,54 +166,42 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						state:     msg.status.Fields["state"],
 						home:      vm.home,
 						name:      msg.status.Name,
+						// Reset the selected command
+						selectedCommand: 0,
 					}
 					v.ecosystem.environments[i].VMs[j] = updatedVM
 				}
 			}
 		}
 
+	// Result from a command has been streamed in
 	case streamMsg:
+		// Put the content directly in the viewport
 		v.vagrantOutputView.viewport.SetContent(string(msg))
+		// Stop spinning
 		v.spinner.show = false
+		// Pick new spinner for next time
+		v.spinner.spinner.Spinner = spinners[rand.Intn(len(spinners))]
+		// Getting a streamMsg means something happened so run async task to get
+		// new status on the VM the command was just run on.
 		return v, v.getVMStatus(v.getCurrentVM().machineID)
 
+	// Handle error messages (just throw them in the viewport)
 	case ecosystemErrMsg:
 		v.vagrantOutputView.viewport.SetContent(msg.Error())
 	case statusErrMsg:
 		v.vagrantOutputView.viewport.SetContent(msg.Error())
 	}
 
+	// Spinner needs spinCmd every update to know to keep spinning?
 	if v.spinner.show {
 		var spinCmd tea.Cmd
 		v.spinner.spinner, spinCmd = v.spinner.spinner.Update(msg)
 		return v, spinCmd
 	} else {
+		// Viewport needs vpCmd every update to know to handle user input?
 		var vpCmd tea.Cmd
 		v.vagrantOutputView.viewport, vpCmd = v.vagrantOutputView.viewport.Update(msg)
 		return v, vpCmd
 	}
-}
-
-// Go `%` operator is not the same as Python, which gives you the actual modulo in return.
-// This function does what `%` does in Python.
-// https://stackoverflow.com/questions/43018206/modulo-of-negative-integers-in-go
-func mod(a, b int) int {
-	return (a%b + b) % b
-}
-
-func Select[T any](list *[]T, current *T, direction int) *T {
-	for i := range *list {
-		if reflect.DeepEqual(current, &(*list)[i]) {
-			// Return the next item using modulo math
-			return &((*list)[mod((i+direction), len(*list))])
-		}
-	}
-	return nil
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
 }
