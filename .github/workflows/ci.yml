@@ -29,7 +29,9 @@ jobs:
           go-version: '1.19'
 
       - name: Install dependencies
-        run: go get ./...
+        run: |
+          go get ./...
+          apt install vagrant
 
       - name: Test
         run: make test
