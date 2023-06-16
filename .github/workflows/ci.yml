@@ -2,12 +2,8 @@ name: ci
 
 on:
   push:
-    paths:
-      - '*.go'
-      - go.mod
-    tags:
-      - v*
   pull_request:
+  workflow_dispatch:
 
 jobs:
   build:
