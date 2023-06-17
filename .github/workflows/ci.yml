@@ -43,7 +43,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GO111MODULE: "on"
-      CGO_ENABLED: 0
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
