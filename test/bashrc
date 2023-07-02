@@ -1,0 +1,37 @@
+#!/bin/bash
+export LS_OPTIONS='--color=auto'
+alias ls='ls $LS_OPTIONS'
+alias ll='ls $LS_OPTIONS -l'
+alias l='ls $LS_OPTIONS -lA'
+
+alias vd='vagrant destroy'
+alias vgs='vagrant global-status'
+alias vh='vagrant halt'
+alias vr='vagrant reload'
+alias vssh='vagrant ssh'
+alias vs='vagrant status'
+alias vu='vagrant up'
+
+export PATH=$PATH:$HOME/go/bin/
+
+GREEN=$(tput setaf 114)
+BLUE=$(tput setaf 111)
+PURPLE=$(tput setaf 183)
+DARK_PURPLE=$(tput setaf 93)
+WHITE=$(tput setaf 189)
+END='\e[0m'
+
+# Set PS1 prompt
+export PS1="${BLUE}\u${WHITE} at ${PURPLE}\h${WHITE} in ${GREEN}\W"
+PS1+='\n'
+PS1+="${DARK_PURPLE}>${END} "
+export PS1
+
+rebuild() {
+    pushd /vagrant &>/dev/null || exit
+        make install
+    popd &>/dev/null || exit
+}
+
+alias single="bash /vagarnt/test/single_env.sh"
+alias multi="bash /vagarnt/test/multi_env.sh"

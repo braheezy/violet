@@ -3,3 +3,5 @@ notes*
 *.log
 bin/
 dist/
+.vagrant
+test/test*-env
