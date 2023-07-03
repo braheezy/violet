@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/charmbracelet/bubbles/key"
@@ -72,6 +73,20 @@ func (k helpKeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{k.Up, k.Down, k.Left, k.Right},                        // first column
 		{k.Switch, k.Execute, k.ChooseCommand, k.Help, k.Quit}, // second column
+	}
+}
+
+type runMsg string
+
+func (v Violet) getRunCommandOnVM(command string, identifier string) tea.Cmd {
+	return func() tea.Msg {
+		output := make(chan string)
+		go v.ecosystem.client.RunCommand(fmt.Sprintf("%v %v", command, identifier), output)
+		var content string
+		for value := range output {
+			content += string(value) + "\n"
+		}
+		return runMsg(content)
 	}
 }
 

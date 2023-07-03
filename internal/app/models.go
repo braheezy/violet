@@ -11,14 +11,6 @@ import (
 
 var supportedVagrantCommands = []string{"up", "halt", "reload", "provision"}
 
-// Ecosystem contains the total Vagrant world information
-type Ecosystem struct {
-	// Collection of all Vagrant environments
-	environments []Environment
-	// Reference to a Vagrant client to run commands with
-	client *vagrant.VagrantClient
-}
-
 // Environment represents a single Vagrant project
 type Environment struct {
 	// Friendly name for the Environment
