@@ -116,20 +116,20 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, v.keys.Execute):
 			currentVM := v.getCurrentVM()
 			v.spinner.show = true
-			vagrantCmd := supportedVagrantCommands[currentVM.selectedCommand]
+			vagrantCommand := supportedVagrantCommands[currentVM.selectedCommand]
 			v.spinner.title = fmt.Sprintf(
 				"%v %v command on %v...",
 				verbs[rand.Intn(len(verbs))],
-				vagrantCmd,
+				vagrantCommand,
 				currentVM.name)
 			// This must be sent for the spinner to spin
 			tickCmd := v.spinner.spinner.Tick
 			// Run the command async and stream result back
-			streamCmd := v.runCommandOnVM(
-				vagrantCmd,
+			runCmd := v.getRunCommandOnVM(
+				vagrantCommand,
 				currentVM.machineID,
 			)
-			return v, tea.Batch(tickCmd, streamCmd)
+			return v, tea.Batch(tickCmd, runCmd)
 		case key.Matches(msg, v.keys.Help):
 			v.help.ShowAll = !v.help.ShowAll
 		case key.Matches(msg, v.keys.Quit):

@@ -55,28 +55,24 @@ func (c *VagrantClient) GetVersion() (string, error) {
 	return version, nil
 }
 
-// ReadChanToString is a simple helper to drain a channel into a string
-func ReadChanToString(channel chan string) (result string) {
-	for value := range channel {
+// GetGlobalStatus
+func (c *VagrantClient) GetGlobalStatus() (result string) {
+	output := make(chan string)
+	go c.RunCommand("global-status --machine-readable", output)
+
+	for value := range output {
 		result += string(value) + "\n"
 	}
 	return result
 }
 
-// GetGlobalStatus
-func (c *VagrantClient) GetGlobalStatus() string {
-	output := make(chan string)
-	go c.RunCommand("global-status --machine-readable", output)
-
-	result := ReadChanToString(output)
-	return result
-}
-
-func (c *VagrantClient) GetStatusForID(machineID string) (string, error) {
+func (c *VagrantClient) GetStatusForID(machineID string) (result string, err error) {
 	output := make(chan string)
 	go c.RunCommand(fmt.Sprintf("status %v --machine-readable", machineID), output)
 
-	result := ReadChanToString(output)
+	for value := range output {
+		result += string(value) + "\n"
+	}
 
 	if strings.Contains(result, "Error") {
 		return "", errors.New(result)

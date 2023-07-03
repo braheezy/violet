@@ -128,7 +128,7 @@ func (v Violet) getVMStatus(identifier string) tea.Cmd {
 
 type runMsg string
 
-func (v Violet) runCommandOnVM(command string, identifier string) tea.Cmd {
+func (v Violet) getRunCommandOnVM(command string, identifier string) tea.Cmd {
 	return func() tea.Msg {
 		output := make(chan string)
 		go v.ecosystem.client.RunCommand(fmt.Sprintf("%v %v", command, identifier), output)
