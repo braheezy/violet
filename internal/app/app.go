@@ -12,12 +12,29 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-// Updates for the entire ecosystem. Usually with results from `global-status`
-type ecosystemMsg Ecosystem
+func Run() {
+	if os.Getenv("VIOLET_DEBUG") != "" {
+		if f, err := tea.LogToFile("violet-debug.log", "help"); err != nil {
+			fmt.Println("Couldn't open a file for logging:", err)
+			os.Exit(1)
+		} else {
+			defer f.Close()
+		}
+	}
+	// Set the color palette for the application.
+	if lipgloss.HasDarkBackground() {
+		theme = defaultDarkTheme
+	} else {
+		theme = defaultLightTheme
+	}
+	if _, err := tea.NewProgram(newViolet()).Run(); err != nil {
+		log.Fatalf("Could not start program :(\n%v\n", err)
+	}
+}
 
-type ecosystemErrMsg struct{ err error }
-
-func (e ecosystemErrMsg) Error() string { return e.err.Error() }
+func (v Violet) Init() tea.Cmd {
+	return getInitialGlobalStatus
+}
 
 // Runs on boot to get current Vagrant status on host.
 func getInitialGlobalStatus() tea.Msg {
@@ -31,6 +48,13 @@ func getInitialGlobalStatus() tea.Msg {
 	}
 	return ecosystemMsg(ecosystem)
 }
+
+// Updates for the entire ecosystem. Usually with results from `global-status`
+type ecosystemMsg Ecosystem
+
+type ecosystemErrMsg struct{ err error }
+
+func (e ecosystemErrMsg) Error() string { return e.err.Error() }
 
 // Call `global-status` and translate result into a new Ecosystem
 func createEcosystem(client *vagrant.VagrantClient) (Ecosystem, error) {
@@ -72,10 +96,6 @@ func createEcosystem(client *vagrant.VagrantClient) (Ecosystem, error) {
 	}, nil
 }
 
-func (v Violet) Init() tea.Cmd {
-	return getInitialGlobalStatus
-}
-
 // Status messages get emitted on a per-VM basis
 type statusMsg struct {
 	// identifier is the name or machine-id for this status info
@@ -106,10 +126,9 @@ func (v Violet) getVMStatus(identifier string) tea.Cmd {
 	}
 }
 
-type streamMsg string
+type runMsg string
 
-// TODO: This doesn't actually stream the output back in realtime. Why not?
-func (v Violet) streamCommandOnVM(command string, identifier string) tea.Cmd {
+func (v Violet) runCommandOnVM(command string, identifier string) tea.Cmd {
 	return func() tea.Msg {
 		output := make(chan string)
 		go v.ecosystem.client.RunCommand(fmt.Sprintf("%v %v", command, identifier), output)
@@ -117,26 +136,6 @@ func (v Violet) streamCommandOnVM(command string, identifier string) tea.Cmd {
 		for value := range output {
 			content += string(value) + "\n"
 		}
-		return streamMsg(content)
-	}
-}
-
-func Run() {
-	if os.Getenv("VIOLET_DEBUG") != "" {
-		if f, err := tea.LogToFile("violet-debug.log", "help"); err != nil {
-			fmt.Println("Couldn't open a file for logging:", err)
-			os.Exit(1)
-		} else {
-			defer f.Close()
-		}
-	}
-	// Set the color palette for the application.
-	if lipgloss.HasDarkBackground() {
-		theme = defaultDarkTheme
-	} else {
-		theme = defaultLightTheme
-	}
-	if _, err := tea.NewProgram(newViolet()).Run(); err != nil {
-		log.Fatalf("Could not start program :(\n%v\n", err)
+		return runMsg(content)
 	}
 }

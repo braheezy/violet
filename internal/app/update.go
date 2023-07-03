@@ -125,7 +125,7 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// This must be sent for the spinner to spin
 			tickCmd := v.spinner.spinner.Tick
 			// Run the command async and stream result back
-			streamCmd := v.streamCommandOnVM(
+			streamCmd := v.runCommandOnVM(
 				vagrantCmd,
 				currentVM.machineID,
 			)
@@ -175,7 +175,7 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	// Result from a command has been streamed in
-	case streamMsg:
+	case runMsg:
 		// Put the content directly in the viewport
 		v.vagrantOutputView.viewport.SetContent(string(msg))
 		// Stop spinning
