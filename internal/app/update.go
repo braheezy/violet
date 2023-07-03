@@ -1,8 +1,6 @@
 package app
 
 import (
-	"fmt"
-	"math/rand"
 	"strconv"
 
 	"github.com/charmbracelet/bubbles/key"
@@ -77,8 +75,6 @@ func (k helpKeyMap) FullHelp() [][]key.Binding {
 	}
 }
 
-var verbs = []string{"Running", "Executing", "Performing", "Invoking", "Launching", "Casting"}
-
 func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	// Window was resized
@@ -115,21 +111,14 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return v, nil
 		case key.Matches(msg, v.keys.Execute):
 			currentVM := v.getCurrentVM()
-			v.spinner.show = true
 			vagrantCommand := supportedVagrantCommands[currentVM.selectedCommand]
-			v.spinner.title = fmt.Sprintf(
-				"%v %v command on %v...",
-				verbs[rand.Intn(len(verbs))],
-				vagrantCommand,
-				currentVM.name)
-			// This must be sent for the spinner to spin
-			tickCmd := v.spinner.spinner.Tick
 			// Run the command async and stream result back
-			runCmd := v.getRunCommandOnVM(
+			runCommand := v.getRunCommandOnVM(
 				vagrantCommand,
 				currentVM.machineID,
 			)
-			return v, tea.Batch(tickCmd, runCmd)
+			layoutCommand := v.layout.UpdatePreExec(vagrantCommand, currentVM.name)
+			return v, tea.Batch(runCommand, layoutCommand)
 		case key.Matches(msg, v.keys.Help):
 			v.help.ShowAll = !v.help.ShowAll
 		case key.Matches(msg, v.keys.Quit):
@@ -176,10 +165,7 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	// Result from a command has been streamed in
 	case runMsg:
-		// Stop spinning
-		v.spinner.show = false
-		// Pick new spinner for next time
-		v.spinner.spinner.Spinner = spinners[rand.Intn(len(spinners))]
+		v.layout.UpdatePostExec()
 		// Getting a streamMsg means something happened so run async task to get
 		// new status on the VM the command was just run on.
 		return v, v.getVMStatus(v.getCurrentVM().machineID)
@@ -189,12 +175,6 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case statusErrMsg:
 	}
 
-	// Spinner needs spinCmd every update to know to keep spinning?
-	if v.spinner.show {
-		var spinCmd tea.Cmd
-		v.spinner.spinner, spinCmd = v.spinner.spinner.Update(msg)
-		return v, spinCmd
-	} else {
-		return v, nil
-	}
+	return v, v.layout.UpdateAlways(msg)
+
 }

@@ -67,10 +67,6 @@ type Violet struct {
 	// Indexes of the respective lists that are currently selected.
 	selectedEnv int
 	selectedVM  int
-	// Buttons to allow the user to run commands
-	commandButtons buttonGroup
-	// Spinner to show while commands are running
-	spinner currentSpinner
 	// Current layout to use
 	layout Layout
 }
@@ -93,13 +89,11 @@ func newViolet() Violet {
 			environments: nil,
 			client:       client,
 		},
-		keys:           keys,
-		help:           help,
-		selectedEnv:    0,
-		selectedVM:     0,
-		commandButtons: newCommandButtons(),
-		spinner:        newSpinner(),
-		layout:         newDefaultLayout(),
+		keys:        keys,
+		help:        help,
+		selectedEnv: 0,
+		selectedVM:  0,
+		layout:      newDefaultLayout(),
 	}
 }
 

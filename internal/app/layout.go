@@ -2,22 +2,54 @@ package app
 
 import (
 	"fmt"
+	"math/rand"
 	"strings"
 
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
 type Layout interface {
 	View(v *Violet) string
+	UpdatePreExec(string, string) tea.Cmd
+	UpdatePostExec()
+	UpdateAlways(tea.Msg) tea.Cmd
 }
 
-type cardLayout struct{}
+type cardLayout struct {
+	// Spinner to show while commands are running
+	spinner currentSpinner
+	// Buttons to allow the user to run commands
+	commandButtons buttonGroup
+}
 
 func newDefaultLayout() Layout {
-	return cardLayout{}
+	return &cardLayout{
+		spinner:        newSpinner(),
+		commandButtons: newCommandButtons(),
+	}
 }
 
-func (c cardLayout) View(v *Violet) (view string) {
+var verbs = []string{"Running", "Executing", "Performing", "Invoking", "Launching", "Casting"}
+
+func (c *cardLayout) UpdatePreExec(cmd string, name string) tea.Cmd {
+	c.spinner.show = true
+	c.spinner.title = fmt.Sprintf(
+		"%v %v command on %v...",
+		verbs[rand.Intn(len(verbs))],
+		cmd,
+		name)
+	// This must be sent for the spinner to spin
+	tickCmd := c.spinner.spinner.Tick
+	return tickCmd
+}
+
+func (c *cardLayout) UpdatePostExec() {
+	c.spinner.show = false
+	c.spinner.spinner.Spinner = spinners[rand.Intn(len(spinners))]
+}
+
+func (c *cardLayout) View(v *Violet) (view string) {
 	// Title view area
 	title := `
 	██╗░░░██╗██╗░█████╗░██╗░░░░░███████╗████████╗
@@ -46,8 +78,8 @@ func (c cardLayout) View(v *Violet) (view string) {
 			// "Viewing" a VM will get it's specific info
 			vmInfo := vm.View()
 			// Commands are the same for everyone so they are grabbed from the main model
-			commands := v.commandButtons.View(vm.selectedCommand)
-			commandsWidth = v.commandButtons.width
+			commands := c.commandButtons.View(vm.selectedCommand)
+			commandsWidth = c.commandButtons.width
 			cardInfo := lipgloss.JoinHorizontal(lipgloss.Center, vmInfo, commands)
 			if i == v.selectedVM {
 				cardInfo = selectedCardStyle.Render(cardInfo)
@@ -91,9 +123,9 @@ func (c cardLayout) View(v *Violet) (view string) {
 
 	// Area to view output from Vagrant commands
 	outputView := ""
-	if v.spinner.show {
+	if c.spinner.show {
 		outputView = "Vagrant Output:\n\n"
-		outputView += fmt.Sprintf("%v %v", v.spinner.title, v.spinner.spinner.View())
+		outputView += fmt.Sprintf("%v %v", c.spinner.title, c.spinner.spinner.View())
 		// Maintain whitespace to keep help view from jumping around
 		outputView += strings.Repeat("\n", outputHeight-1)
 	} else {
@@ -107,4 +139,14 @@ func (c cardLayout) View(v *Violet) (view string) {
 	view += "\n"
 
 	return view
+}
+
+func (c cardLayout) UpdateAlways(msg tea.Msg) tea.Cmd {
+	// Spinner needs spinCmd every update to know to keep spinning?
+	if c.spinner.show {
+		var spinCmd tea.Cmd
+		c.spinner.spinner, spinCmd = c.spinner.spinner.Update(msg)
+		return spinCmd
+	}
+	return nil
 }
