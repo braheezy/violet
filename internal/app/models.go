@@ -86,6 +86,8 @@ type Violet struct {
 	commandButtons buttonGroup
 	// Spinner to show while commands are running
 	spinner currentSpinner
+	// Current layout to use
+	layout Layout
 }
 
 // Return the default Violet model
@@ -113,6 +115,7 @@ func newViolet() Violet {
 		vagrantOutputView: outputViewport{vagrantOutputView},
 		commandButtons:    newCommandButtons(),
 		spinner:           newSpinner(),
+		layout:            newDefaultLayout(),
 	}
 }
 
