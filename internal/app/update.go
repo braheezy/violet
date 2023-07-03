@@ -176,8 +176,6 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	// Result from a command has been streamed in
 	case runMsg:
-		// Put the content directly in the viewport
-		v.vagrantOutputView.viewport.SetContent(string(msg))
 		// Stop spinning
 		v.spinner.show = false
 		// Pick new spinner for next time
@@ -186,11 +184,9 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// new status on the VM the command was just run on.
 		return v, v.getVMStatus(v.getCurrentVM().machineID)
 
-	// Handle error messages (just throw them in the viewport)
+	// TODO: Handle error messages (just throw them in the viewport)
 	case ecosystemErrMsg:
-		v.vagrantOutputView.viewport.SetContent(msg.Error())
 	case statusErrMsg:
-		v.vagrantOutputView.viewport.SetContent(msg.Error())
 	}
 
 	// Spinner needs spinCmd every update to know to keep spinning?
@@ -199,9 +195,6 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		v.spinner.spinner, spinCmd = v.spinner.spinner.Update(msg)
 		return v, spinCmd
 	} else {
-		// Viewport needs vpCmd every update to know to handle user input?
-		var vpCmd tea.Cmd
-		v.vagrantOutputView.viewport, vpCmd = v.vagrantOutputView.viewport.Update(msg)
-		return v, vpCmd
+		return v, nil
 	}
 }

@@ -90,19 +90,17 @@ func (c cardLayout) View(v *Violet) (view string) {
 	view += "\n\n"
 
 	// Area to view output from Vagrant commands
-	outputView := "Vagrant Output:\n"
+	outputView := ""
 	if v.spinner.show {
+		outputView = "Vagrant Output:\n\n"
 		outputView += fmt.Sprintf("%v %v", v.spinner.title, v.spinner.spinner.View())
 		// Maintain whitespace to keep help view from jumping around
 		outputView += strings.Repeat("\n", outputHeight-1)
-	} else if v.vagrantOutputView.hasContent() {
-		outputView += v.vagrantOutputView.viewport.View()
 	} else {
 		// Reserve the whitespace anyway
 		outputView += strings.Repeat("\n", outputHeight)
 	}
 	view += outputView
-	view += "\n\n"
 
 	help := v.help.View(v.keys)
 	view += help

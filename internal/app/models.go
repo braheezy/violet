@@ -56,19 +56,6 @@ func (vm *VM) View() string {
 	return content
 }
 
-// The view area for Vagrant output
-type outputViewport struct {
-	viewport viewport.Model
-}
-
-// True if the viewport has stuff to show.
-// Guesstimated...
-func (o *outputViewport) hasContent() bool {
-	currentSize := len(o.viewport.View())
-	defaultSize := outputHeight * outputWidth
-	return currentSize > defaultSize
-}
-
 // Complete app state (i.e. the BubbleTea model)
 type Violet struct {
 	// Reference to the Ecosystem
@@ -80,8 +67,6 @@ type Violet struct {
 	// Indexes of the respective lists that are currently selected.
 	selectedEnv int
 	selectedVM  int
-	// Viewport to view Vagrant output
-	vagrantOutputView outputViewport
 	// Buttons to allow the user to run commands
 	commandButtons buttonGroup
 	// Spinner to show while commands are running
@@ -108,14 +93,13 @@ func newViolet() Violet {
 			environments: nil,
 			client:       client,
 		},
-		keys:              keys,
-		help:              help,
-		selectedEnv:       0,
-		selectedVM:        0,
-		vagrantOutputView: outputViewport{vagrantOutputView},
-		commandButtons:    newCommandButtons(),
-		spinner:           newSpinner(),
-		layout:            newDefaultLayout(),
+		keys:           keys,
+		help:           help,
+		selectedEnv:    0,
+		selectedVM:     0,
+		commandButtons: newCommandButtons(),
+		spinner:        newSpinner(),
+		layout:         newDefaultLayout(),
 	}
 }
 
