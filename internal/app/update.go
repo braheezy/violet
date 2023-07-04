@@ -104,7 +104,6 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, keys.ChooseCommand):
 			selected, _ := strconv.Atoi(msg.String())
 			v.getCurrentVM().selectedCommand = selected - 1
-			// v.ecosystem.environments[v.selectedEnv].VMs[v.selectedVM].selectedCommand = selected - 1
 		case key.Matches(msg, v.keys.Left):
 			if v.selectedVM == 0 {
 				v.selectedVM = len(v.ecosystem.environments[v.selectedEnv].VMs) - 1
