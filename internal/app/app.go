@@ -29,7 +29,8 @@ func Run() {
 	} else {
 		theme = defaultLightTheme
 	}
-	if _, err := tea.NewProgram(newViolet()).Run(); err != nil {
+	p := tea.NewProgram(newViolet(), tea.WithAltScreen())
+	if _, err := p.Run(); err != nil {
 		log.Fatalf("Could not start program :(\n%v\n", err)
 	}
 }
