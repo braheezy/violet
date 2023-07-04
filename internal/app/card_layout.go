@@ -9,25 +9,11 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-type Layout interface {
-	View(v *Violet) string
-	UpdatePreExec(string, string) tea.Cmd
-	UpdatePostExec()
-	UpdateAlways(tea.Msg) tea.Cmd
-}
-
 type cardLayout struct {
 	// Spinner to show while commands are running
 	spinner currentSpinner
 	// Buttons to allow the user to run commands
 	commandButtons buttonGroup
-}
-
-func newDefaultLayout() Layout {
-	return &cardLayout{
-		spinner:        newSpinner(),
-		commandButtons: newCommandButtons(),
-	}
 }
 
 var verbs = []string{"Running", "Executing", "Performing", "Invoking", "Launching", "Casting"}

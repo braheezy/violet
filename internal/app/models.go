@@ -6,10 +6,25 @@ import (
 	"github.com/braheezy/violet/pkg/vagrant"
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/viewport"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
 var supportedVagrantCommands = []string{"up", "halt", "reload", "provision"}
+
+type Layout interface {
+	View(v *Violet) string
+	UpdatePreExec(string, string) tea.Cmd
+	UpdatePostExec()
+	UpdateAlways(tea.Msg) tea.Cmd
+}
+
+func newDefaultLayout() Layout {
+	return &cardLayout{
+		spinner:        newSpinner(),
+		commandButtons: newCommandButtons(),
+	}
+}
 
 // Environment represents a single Vagrant project
 type Environment struct {
