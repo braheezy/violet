@@ -24,7 +24,7 @@ func (v Violet) View() (view string) {
 	view += "\n"
 
 	help := v.help.View(v.keys)
-	view += help
+	view += lipgloss.NewStyle().Margin(0, 2).Render(help)
 	view += "\n\n"
 
 	// Show the current environments
@@ -89,11 +89,20 @@ func (v Violet) View() (view string) {
 	view += envTitle + envArea
 	view += "\n\n"
 
-	outputView := ""
 	if v.layout.spinner.show {
-		outputView = fmt.Sprintf("%v %v\n\n", v.layout.spinner.title, v.layout.spinner.spinner.View())
+		currentVM := v.getCurrentVM()
+		command := spinnerCommandStyle.Render(supportedVagrantCommands[currentVM.selectedCommand])
+
+		title := spinnerStyle.Render(fmt.Sprintf(
+			"%v: %v command %v",
+			currentVM.name,
+			v.layout.spinner.verb,
+			command,
+		))
+
+		progressView := fmt.Sprintf("%v %v %v\n\n", v.layout.spinner.spinner.View(), title, v.layout.spinner.spinner.View())
+		view += lipgloss.NewStyle().Padding(0, 2).Render(progressView)
 	}
-	view += outputView
 
 	return view
 }

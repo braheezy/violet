@@ -144,11 +144,7 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				currentVM.machineID,
 			)
 			v.layout.spinner.show = true
-			v.layout.spinner.title = fmt.Sprintf(
-				"%v %v command on %v...",
-				verbs[rand.Intn(len(verbs))],
-				vagrantCommand,
-				currentVM.name)
+			v.layout.spinner.verb = verbs[rand.Intn(len(verbs))]
 			// This must be sent for the spinner to spin
 			tickCmd := v.layout.spinner.spinner.Tick
 			return v, tea.Batch(runCommand, tickCmd)
@@ -176,6 +172,8 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	// New data about a specific VM has come in
 	case statusMsg:
+		v.layout.spinner.show = false
+		v.layout.spinner.spinner.Spinner = spinners[rand.Intn(len(spinners))]
 		// Find the VM this message is about
 		for i, env := range v.ecosystem.environments {
 			for j, vm := range env.VMs {
@@ -198,8 +196,6 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	// Result from a command has been streamed in
 	case runMsg:
-		v.layout.spinner.show = false
-		v.layout.spinner.spinner.Spinner = spinners[rand.Intn(len(spinners))]
 		// Getting a streamMsg means something happened so run async task to get
 		// new status on the VM the command was just run on.
 		return v, v.getVMStatus(v.getCurrentVM().machineID)

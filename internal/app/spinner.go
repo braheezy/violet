@@ -2,6 +2,7 @@ package app
 
 import (
 	"github.com/charmbracelet/bubbles/spinner"
+	"github.com/charmbracelet/lipgloss"
 )
 
 var (
@@ -17,12 +18,19 @@ var (
 		spinner.Moon,
 		spinner.Monkey,
 	}
+
+	spinnerStyle = lipgloss.NewStyle().
+			Foreground(secondaryColor).
+			Italic(true)
+	spinnerCommandStyle = spinnerStyle.Copy().
+				Bold(true).
+				Foreground(accentColor)
 )
 
 type currentSpinner struct {
 	spinner spinner.Model
 	show    bool
-	title   string
+	verb    string
 }
 
 func newSpinner() currentSpinner {
@@ -30,7 +38,5 @@ func newSpinner() currentSpinner {
 	s.Spinner = spinners[0]
 	return currentSpinner{
 		spinner: s,
-		show:    false,
-		title:   "",
 	}
 }
