@@ -19,7 +19,8 @@ var (
 	cardProviderStyle = lipgloss.NewStyle().
 				Faint(true).
 				Italic(true).
-				PaddingLeft(1)
+				PaddingLeft(1).
+				Foreground(textColor)
 	selectedCardStyle = lipgloss.NewStyle().
 				Border(lipgloss.NormalBorder(), false, false, false, true).
 				BorderForeground(accentColor).

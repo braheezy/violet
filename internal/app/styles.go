@@ -13,8 +13,8 @@ var theme = defaultDarkTheme
 // Tweak these for a different palette
 var (
 	primaryColor   = theme.Purple()
-	secondaryColor = theme.BrightBlue()
-	accentColor    = theme.Yellow()
+	secondaryColor = theme.Yellow()
+	accentColor    = theme.BrightCyan()
 	textColor      = theme.Fg()
 )
 
@@ -25,7 +25,7 @@ var (
 			Foreground(primaryColor)
 
 	greeterStyle = lipgloss.NewStyle().
-			Foreground(accentColor)
+			Foreground(secondaryColor)
 )
 
 var (
@@ -46,9 +46,11 @@ var (
 	inactiveTabStyle = lipgloss.NewStyle().
 				Border(inactiveTabBorder, true).
 				BorderForeground(highlightColor).
-				Padding(0, 1)
+				Padding(0, 1).
+				Foreground(textColor)
 	activeTabStyle = inactiveTabStyle.Copy().
-			Border(activeTabBorder, true)
+			Border(activeTabBorder, true).
+			Foreground(accentColor)
 	tabGapStyle = inactiveTabStyle.Copy().
 			Border(gapBorder)
 	tabWindowStyle = lipgloss.NewStyle().
