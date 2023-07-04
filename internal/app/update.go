@@ -16,28 +16,33 @@ type helpKeyMap struct {
 	Right         key.Binding
 	Switch        key.Binding
 	Execute       key.Binding
-	ChooseCommand key.Binding
+	SelectCommand key.Binding
+	SelectVM      key.Binding
 	Help          key.Binding
 	Quit          key.Binding
 }
 
 // Setup the keybinding and help text for each key
 var keys = helpKeyMap{
+	SelectVM: key.NewBinding(
+		key.WithKeys("up", "k", "down", "j"),
+		key.WithHelp("↑/k ↓/j", "select vm"),
+	),
+	SelectCommand: key.NewBinding(
+		key.WithKeys("left", "h", "right", "l"),
+		key.WithHelp("←/h →/l", "select command"),
+	),
 	Up: key.NewBinding(
 		key.WithKeys("up", "k"),
-		key.WithHelp("↑/k", "select command"),
 	),
 	Down: key.NewBinding(
 		key.WithKeys("down", "j"),
-		key.WithHelp("↓/j", "select command"),
 	),
 	Left: key.NewBinding(
 		key.WithKeys("left", "h"),
-		key.WithHelp("←/h", "select vm"),
 	),
 	Right: key.NewBinding(
 		key.WithKeys("right", "l"),
-		key.WithHelp("→/l", "select vm"),
 	),
 	Switch: key.NewBinding(
 		key.WithKeys("tab"),
@@ -47,10 +52,6 @@ var keys = helpKeyMap{
 		key.WithKeys("enter"),
 		key.WithHelp("⏎ enter", "run selected command"),
 	),
-	// ChooseCommand: key.NewBinding(
-	// 	key.WithKeys("down", "j", "up", "k"),
-	// 	key.WithHelp("↓/j ↑/k", "select command by number"),
-	// ),
 	Help: key.NewBinding(
 		key.WithKeys("?"),
 		key.WithHelp("?", "toggle help"),
@@ -71,8 +72,8 @@ func (k helpKeyMap) ShortHelp() []key.Binding {
 // key.Map interface.
 func (k helpKeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
-		{k.Up, k.Down, k.Left, k.Right},                        // first column
-		{k.Switch, k.Execute, k.ChooseCommand, k.Help, k.Quit}, // second column
+		{k.SelectVM, k.SelectCommand, k.Switch}, // first column
+		{k.Execute, k.Help, k.Quit},             // second column
 	}
 }
 
