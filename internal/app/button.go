@@ -10,13 +10,13 @@ var (
 	defaultButtonStyle = lipgloss.NewStyle().
 				Foreground(primaryColor).
 				Background(theme.Bg()).
-				Padding(1, 2)
+				Padding(1)
 	activeButtonStyle = defaultButtonStyle.Copy().
 				Foreground(textColor).
 				Background(primaryColor).
 				Bold(true)
 	buttonGroupStyle = lipgloss.NewStyle().
-				MarginLeft(12).
+				MarginLeft(4).
 				Padding(1)
 )
 
@@ -38,8 +38,8 @@ func newCommandButtons() buttonGroup {
 	var buttons []button
 	var longestCommand int
 	// Create buttons based on supported commands
-	for i, command := range supportedVagrantCommands {
-		content := fmt.Sprintf("%v. %v", i+1, command)
+	for _, command := range supportedVagrantCommands {
+		content := fmt.Sprintf("%v", command)
 		longestCommand = max(longestCommand, len(content))
 		buttons = append(buttons, button{
 			content: content,

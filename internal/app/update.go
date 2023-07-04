@@ -2,7 +2,7 @@ package app
 
 import (
 	"fmt"
-	"strconv"
+	"math/rand"
 
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
@@ -25,11 +25,11 @@ type helpKeyMap struct {
 var keys = helpKeyMap{
 	Up: key.NewBinding(
 		key.WithKeys("up", "k"),
-		key.WithHelp("↑/k", "scroll output up"),
+		key.WithHelp("↑/k", "select command"),
 	),
 	Down: key.NewBinding(
 		key.WithKeys("down", "j"),
-		key.WithHelp("↓/j", "scroll output down"),
+		key.WithHelp("↓/j", "select command"),
 	),
 	Left: key.NewBinding(
 		key.WithKeys("left", "h"),
@@ -47,10 +47,10 @@ var keys = helpKeyMap{
 		key.WithKeys("enter"),
 		key.WithHelp("⏎ enter", "run selected command"),
 	),
-	ChooseCommand: key.NewBinding(
-		key.WithKeys("1", "2", "3", "4"),
-		key.WithHelp("number", "select command by number"),
-	),
+	// ChooseCommand: key.NewBinding(
+	// 	key.WithKeys("down", "j", "up", "k"),
+	// 	key.WithHelp("↓/j ↑/k", "select command by number"),
+	// ),
 	Help: key.NewBinding(
 		key.WithKeys("?"),
 		key.WithHelp("?", "toggle help"),
@@ -97,20 +97,31 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// If we set a width on the help menu it can it can gracefully truncate
 		// its view as needed.
 		v.help.Width = msg.Width
+		v.terminalWidth = msg.Width
+		v.terminalHeight = msg.Height
 
 	// User pressed a key
 	case tea.KeyMsg:
 		switch {
-		case key.Matches(msg, keys.ChooseCommand):
-			selected, _ := strconv.Atoi(msg.String())
-			v.getCurrentVM().selectedCommand = selected - 1
 		case key.Matches(msg, v.keys.Left):
+			if v.getCurrentVM().selectedCommand == 0 {
+				v.getCurrentVM().selectedCommand = len(supportedVagrantCommands) - 1
+			} else {
+				v.getCurrentVM().selectedCommand--
+			}
+		case key.Matches(msg, v.keys.Right):
+			if v.getCurrentVM().selectedCommand == len(supportedVagrantCommands)-1 {
+				v.getCurrentVM().selectedCommand = 0
+			} else {
+				v.getCurrentVM().selectedCommand++
+			}
+		case key.Matches(msg, v.keys.Up):
 			if v.selectedVM == 0 {
 				v.selectedVM = len(v.ecosystem.environments[v.selectedEnv].VMs) - 1
 			} else {
 				v.selectedVM -= 1
 			}
-		case key.Matches(msg, v.keys.Right):
+		case key.Matches(msg, v.keys.Down):
 			if v.selectedVM == len(v.ecosystem.environments[v.selectedEnv].VMs)-1 {
 				v.selectedVM = 0
 			} else {
@@ -131,8 +142,15 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				vagrantCommand,
 				currentVM.machineID,
 			)
-			layoutCommand := v.layout.UpdatePreExec(vagrantCommand, currentVM.name)
-			return v, tea.Batch(runCommand, layoutCommand)
+			v.layout.spinner.show = true
+			v.layout.spinner.title = fmt.Sprintf(
+				"%v %v command on %v...",
+				verbs[rand.Intn(len(verbs))],
+				vagrantCommand,
+				currentVM.name)
+			// This must be sent for the spinner to spin
+			tickCmd := v.layout.spinner.spinner.Tick
+			return v, tea.Batch(runCommand, tickCmd)
 		case key.Matches(msg, v.keys.Help):
 			v.help.ShowAll = !v.help.ShowAll
 		case key.Matches(msg, v.keys.Quit):
@@ -179,7 +197,8 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	// Result from a command has been streamed in
 	case runMsg:
-		v.layout.UpdatePostExec()
+		v.layout.spinner.show = false
+		v.layout.spinner.spinner.Spinner = spinners[rand.Intn(len(spinners))]
 		// Getting a streamMsg means something happened so run async task to get
 		// new status on the VM the command was just run on.
 		return v, v.getVMStatus(v.getCurrentVM().machineID)
@@ -189,6 +208,12 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case statusErrMsg:
 	}
 
-	return v, v.layout.UpdateAlways(msg)
+	if v.layout.spinner.show {
+		var spinCmd tea.Cmd
+		v.layout.spinner.spinner, spinCmd = v.layout.spinner.spinner.Update(msg)
+		return v, spinCmd
+	}
+
+	return v, nil
 
 }

@@ -11,8 +11,9 @@ var (
 			PaddingLeft(1).
 			Width(12)
 	statusColors = map[string]lipgloss.TerminalColor{
-		"running":     theme.BrightGreen(),
-		"shutoff":     theme.BrightRed(),
+		"running":     theme.Green(),
+		"shutoff":     theme.Red(),
+		"stopped":     theme.Red(),
 		"not started": theme.Black(),
 	}
 	cardProviderStyle = lipgloss.NewStyle().

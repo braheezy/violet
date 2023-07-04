@@ -6,30 +6,26 @@ import (
 )
 
 // Tweak these to quickly change app feels
-var defaultDarkTheme = tint.TintMaterialDark
+var defaultDarkTheme = tint.TintKonsolas
 var defaultLightTheme = tint.TintMaterial
 var theme = defaultDarkTheme
 
 // Tweak these for a different palette
 var (
-	primaryColor   = theme.BrightPurple()
-	secondaryColor = theme.Purple()
-	accentColor    = theme.BrightYellow()
+	primaryColor   = theme.Purple()
+	secondaryColor = theme.BrightBlue()
+	accentColor    = theme.Yellow()
 	textColor      = theme.Fg()
 )
 
 var (
-	outputHeight    = 10
-	outputWidth     = 70
-	outputViewStyle = lipgloss.NewStyle().
-			Border(lipgloss.NormalBorder(), true).
-			BorderForeground(accentColor).
-			MarginLeft(2)
-
 	titleStyle = lipgloss.NewStyle().
 			Bold(true).
 			Italic(true).
-			Foreground(theme.BrightPurple())
+			Foreground(primaryColor)
+
+	greeterStyle = lipgloss.NewStyle().
+			Foreground(accentColor)
 )
 
 var (

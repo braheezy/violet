@@ -5,25 +5,16 @@ import (
 
 	"github.com/braheezy/violet/pkg/vagrant"
 	"github.com/charmbracelet/bubbles/help"
-	"github.com/charmbracelet/bubbles/viewport"
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
 var supportedVagrantCommands = []string{"up", "halt", "reload", "provision"}
 
-type Layout interface {
-	View(v *Violet) string
-	UpdatePreExec(string, string) tea.Cmd
-	UpdatePostExec()
-	UpdateAlways(tea.Msg) tea.Cmd
-}
-
-func newDefaultLayout() Layout {
-	return &cardLayout{
-		spinner:        newSpinner(),
-		commandButtons: newCommandButtons(),
-	}
+type Layout struct {
+	// Spinner to show while commands are running
+	spinner currentSpinner
+	// Buttons to allow the user to run commands
+	commandButtons buttonGroup
 }
 
 // Environment represents a single Vagrant project
@@ -76,6 +67,9 @@ type Violet struct {
 	selectedVM  int
 	// Current layout to use
 	layout Layout
+	// Current terminal size
+	terminalWidth  int
+	terminalHeight int
 }
 
 // Return the default Violet model
@@ -88,9 +82,6 @@ func newViolet() Violet {
 	help := help.New()
 	help.ShowAll = true
 
-	vagrantOutputView := viewport.New(outputWidth, outputHeight)
-	vagrantOutputView.Style = outputViewStyle
-
 	return Violet{
 		ecosystem: Ecosystem{
 			environments: nil,
@@ -100,7 +91,10 @@ func newViolet() Violet {
 		help:        help,
 		selectedEnv: 0,
 		selectedVM:  0,
-		layout:      newDefaultLayout(),
+		layout: Layout{
+			spinner:        newSpinner(),
+			commandButtons: newCommandButtons(),
+		},
 	}
 }
 
