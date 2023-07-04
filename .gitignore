@@ -4,4 +4,4 @@ notes*
 bin/
 dist/
 .vagrant
-test/test*-env
+test/*-env

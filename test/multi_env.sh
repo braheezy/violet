@@ -30,17 +30,17 @@ end
 EOF
 )
 
-TEST_DIR=test1-env
+TEST_DIR=multi-env
 
-if [ -d $TEST_DIR ]; then
-    pushd $TEST_DIR 2>/dev/null
+if [ -d "$TEST_DIR" ]; then
+    pushd "$TEST_DIR" 2>/dev/null
         vagrant destroy -f &>/dev/null || true
     popd
-    rm -rf $TEST_DIR
+    rm -rf "$TEST_DIR"
 fi
 
-mkdir $TEST_DIR
-pushd $TEST_DIR 2>/dev/null
+mkdir "$TEST_DIR"
+pushd "$TEST_DIR" 2>/dev/null
     echo "$VAGRANTFILE" > Vagrantfile
     vagrant up
 popd
