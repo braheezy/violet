@@ -15,6 +15,7 @@ type helpKeyMap struct {
 	Left          key.Binding
 	Right         key.Binding
 	Switch        key.Binding
+	ShiftTab      key.Binding
 	Execute       key.Binding
 	SelectCommand key.Binding
 	SelectVM      key.Binding
@@ -46,7 +47,10 @@ var keys = helpKeyMap{
 	),
 	Switch: key.NewBinding(
 		key.WithKeys("tab"),
-		key.WithHelp("⭾ tab", "switch env tab"),
+		key.WithHelp("⭾ tab/⇧+⭾", "switch env tab"),
+	),
+	ShiftTab: key.NewBinding(
+		key.WithKeys("shift+tab"),
 	),
 	Execute: key.NewBinding(
 		key.WithKeys("enter"),
@@ -135,6 +139,14 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				v.selectedEnv += 1
 			}
 			return v, nil
+		case key.Matches(msg, v.keys.ShiftTab):
+			if v.selectedEnv == 0 {
+				v.selectedEnv = len(v.ecosystem.environments) - 1
+			} else {
+				v.selectedEnv -= 1
+			}
+			return v, nil
+
 		case key.Matches(msg, v.keys.Execute):
 			currentVM := v.getCurrentVM()
 			vagrantCommand := supportedVagrantCommands[currentVM.selectedCommand]
