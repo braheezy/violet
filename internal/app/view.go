@@ -20,7 +20,7 @@ func (v Violet) View() (view string) {
 	title := titleStyle.Render("Violet: ")
 	greeter := greeterStyle.Render("Pretty manager for Vagrant " + randomEmoji())
 	titleGreeter := title + greeter
-	view += lipgloss.NewStyle().Margin(2).Render(titleGreeter)
+	view += lipgloss.NewStyle().Margin(1, 2).Render(titleGreeter)
 	view += "\n"
 
 	help := v.help.View(v.keys)
@@ -89,13 +89,11 @@ func (v Violet) View() (view string) {
 	view += envTitle + envArea
 	view += "\n\n"
 
-	outputView := "\n\n"
+	outputView := ""
 	if v.layout.spinner.show {
 		outputView = fmt.Sprintf("%v %v\n\n", v.layout.spinner.title, v.layout.spinner.spinner.View())
 	}
 	view += outputView
-
-	view += "\n"
 
 	return view
 }
