@@ -46,7 +46,7 @@ var keys = helpKeyMap{
 		key.WithKeys("right", "l"),
 	),
 	Switch: key.NewBinding(
-		key.WithKeys("tab"),
+		key.WithKeys("tab", "shift+tab"),
 		key.WithHelp("⭾ tab/⇧+⭾", "switch env tab"),
 	),
 	ShiftTab: key.NewBinding(
