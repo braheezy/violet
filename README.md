@@ -49,5 +49,14 @@ The `Makefile` contains the most common developer actions to perform. See `make 
 
 ## Contributing
 
+## Roadmap
+- Pagination to handle many environments and/or VMs
+- Error handling: If Vagrant fails, show user the error (or provide a way to get to the error without running Vagrant again)
+- SSH command support
+- Better screen resize support
+- Mouse support
+- File logging
+- Config file?
+
 ## Inspiration
 My interest in TUI applications is growing and I wanted something more complicated and useful (than a [game](https://github.com/braheezy/hangman)) to build. And I got to a learn lots of Go!
