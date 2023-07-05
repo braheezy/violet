@@ -5,3 +5,4 @@ bin/
 dist/
 .vagrant
 test/*-env
+__debug_bin

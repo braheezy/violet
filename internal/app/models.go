@@ -8,7 +8,8 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-var supportedVagrantCommands = []string{"up", "halt", "reload", "provision"}
+// Order matters here.
+var supportedVagrantCommands = []string{"up", "halt", "ssh", "reload", "provision"}
 
 type Layout struct {
 	// Spinner to show while commands are running

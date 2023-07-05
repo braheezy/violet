@@ -1,8 +1,6 @@
 package app
 
 import (
-	"fmt"
-
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -39,10 +37,9 @@ func newCommandButtons() buttonGroup {
 	var longestCommand int
 	// Create buttons based on supported commands
 	for _, command := range supportedVagrantCommands {
-		content := fmt.Sprintf("%v", command)
-		longestCommand = max(longestCommand, len(content))
+		longestCommand = max(longestCommand, len(command))
 		buttons = append(buttons, button{
-			content: content,
+			content: command,
 			style:   defaultButtonStyle,
 		})
 	}
@@ -53,25 +50,33 @@ func newCommandButtons() buttonGroup {
 	return buttonGroup{
 		buttons: buttons,
 		// This provides excellent space for each command
-		width: longestCommand * 2,
+		width: longestCommand * 4,
 	}
 }
 
-func (b *buttonGroup) View(selectedCommand int) string {
-	for i := range b.buttons {
+func (bg *buttonGroup) View(selectedCommand int) string {
+	for i := range bg.buttons {
 		if i == selectedCommand {
-			b.buttons[i].style = activeButtonStyle
+			bg.buttons[i].style = activeButtonStyle
 		} else {
-			b.buttons[i].style = defaultButtonStyle
+			bg.buttons[i].style = defaultButtonStyle
 		}
 	}
 
-	leftSide := lipgloss.JoinVertical(lipgloss.Center, b.buttons[0].View(), b.buttons[2].View())
-	rightSide := lipgloss.JoinVertical(lipgloss.Center, b.buttons[1].View(), b.buttons[3].View())
+	// TODO: Hacky to use an invisible button and to hardcode the row items. Is there a better way?
+	invisibleButton := button{}
+	invisibleButton.style = defaultButtonStyle.Copy().
+		Foreground(lipgloss.NoColor{}).
+		Background(lipgloss.NoColor{})
 
-	group := lipgloss.JoinHorizontal(lipgloss.Center, leftSide, rightSide)
+	topRow := lipgloss.JoinHorizontal(lipgloss.Center, bg.buttons[0].View(), bg.buttons[1].View(), bg.buttons[2].View())
+	bottomRow := lipgloss.JoinHorizontal(lipgloss.Center, bg.buttons[3].View(), bg.buttons[4].View(), invisibleButton.View())
+	// "Align" the bottom row (with only 2 buttons) underneath the top row (with 3 buttons)
+	bottomRow = lipgloss.NewStyle().PaddingLeft(bg.width / 3).Render(bottomRow)
 
-	return buttonGroupStyle.Render(group)
+	grid := lipgloss.JoinVertical(lipgloss.Center, topRow, bottomRow)
+
+	return buttonGroupStyle.Render(grid)
 }
 
 func max(a, b int) int {
