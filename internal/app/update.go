@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"math/rand"
+	"os/exec"
 
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
@@ -81,7 +82,10 @@ func (k helpKeyMap) FullHelp() [][]key.Binding {
 	}
 }
 
-type runMsg string
+type runMsg struct {
+	content string
+	err     error
+}
 
 func (v Violet) getRunCommandOnVM(command string, identifier string) tea.Cmd {
 	return func() tea.Msg {
@@ -91,7 +95,7 @@ func (v Violet) getRunCommandOnVM(command string, identifier string) tea.Cmd {
 		for value := range output {
 			content += string(value) + "\n"
 		}
-		return runMsg(content)
+		return runMsg{content: content}
 	}
 }
 
@@ -150,16 +154,37 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, v.keys.Execute):
 			currentVM := v.getCurrentVM()
 			vagrantCommand := supportedVagrantCommands[currentVM.selectedCommand]
-			// Run the command async and stream result back
-			runCommand := v.getRunCommandOnVM(
-				vagrantCommand,
-				currentVM.machineID,
-			)
-			v.layout.spinner.show = true
-			v.layout.spinner.verb = verbs[rand.Intn(len(verbs))]
-			// This must be sent for the spinner to spin
-			tickCmd := v.layout.spinner.spinner.Tick
-			return v, tea.Batch(runCommand, tickCmd)
+			/*
+				TODO: This doesn't support running commands in a desktop-less environment that doesn't have an external terminal to put commands on. One approach is to use `screen` to create virtual screen.
+
+				Create a virtual screen:
+					screen -dmS <session name> <command>
+				Connect to it:
+					screen -r <session name>
+			*/
+
+			if vagrantCommand == "ssh" {
+				c := exec.Command("vagrant", "ssh", currentVM.machineID)
+				if currentVM.provider == "docker" {
+					c = exec.Command("vagrant", "docker-exec", currentVM.name, "-it", "--", "/bin/sh")
+					c.Dir = currentVM.home
+				}
+				runCommand := tea.ExecProcess(c, func(err error) tea.Msg {
+					return runMsg{content: "", err: err}
+				})
+				return v, runCommand
+			} else {
+				// Run the command async and stream result back
+				runCommand := v.getRunCommandOnVM(
+					vagrantCommand,
+					currentVM.machineID,
+				)
+				v.layout.spinner.show = true
+				v.layout.spinner.verb = verbs[rand.Intn(len(verbs))]
+				// This must be sent for the spinner to spin
+				tickCmd := v.layout.spinner.spinner.Tick
+				return v, tea.Batch(runCommand, tickCmd)
+			}
 		case key.Matches(msg, v.keys.Help):
 			v.help.ShowAll = !v.help.ShowAll
 		case key.Matches(msg, v.keys.Quit):
@@ -208,7 +233,7 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	// Result from a command has been streamed in
 	case runMsg:
-		// Getting a streamMsg means something happened so run async task to get
+		// Getting a runMsg means something happened so run async task to get
 		// new status on the VM the command was just run on.
 		return v, v.getVMStatus(v.getCurrentVM().machineID)
 
