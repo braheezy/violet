@@ -82,7 +82,10 @@ func (k helpKeyMap) FullHelp() [][]key.Binding {
 	}
 }
 
-type runMsg string
+type runMsg struct {
+	content string
+	err     error
+}
 
 func (v Violet) getRunCommandOnVM(command string, identifier string) tea.Cmd {
 	return func() tea.Msg {
@@ -92,7 +95,7 @@ func (v Violet) getRunCommandOnVM(command string, identifier string) tea.Cmd {
 		for value := range output {
 			content += string(value) + "\n"
 		}
-		return runMsg(content)
+		return runMsg{content: content}
 	}
 }
 
@@ -167,7 +170,7 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					c.Dir = currentVM.home
 				}
 				runCommand := tea.ExecProcess(c, func(err error) tea.Msg {
-					return err.Error()
+					return runMsg{content: "", err: err}
 				})
 				return v, runCommand
 			} else {
@@ -230,7 +233,7 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	// Result from a command has been streamed in
 	case runMsg:
-		// Getting a streamMsg means something happened so run async task to get
+		// Getting a runMsg means something happened so run async task to get
 		// new status on the VM the command was just run on.
 		return v, v.getVMStatus(v.getCurrentVM().machineID)
 
