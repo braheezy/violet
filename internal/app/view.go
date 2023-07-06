@@ -40,13 +40,11 @@ func (v Violet) View() (view string) {
 		// They are dealt with first so we know the size of content we need to
 		// wrap in "tabs"
 		vmCards := []string{}
-		commandsWidth := 0
 		for i, vm := range v.ecosystem.environments[v.selectedEnv].VMs {
 			// "Viewing" a VM will get it's specific info
 			vmInfo := vm.View()
 			// Commands are the same for everyone so they are grabbed from the main model
 			commands := v.layout.commandButtons.View(vm.selectedCommand)
-			commandsWidth = v.layout.commandButtons.width
 			cardInfo := lipgloss.JoinHorizontal(lipgloss.Center, vmInfo, commands)
 			if i == v.selectedVM {
 				cardInfo = selectedCardStyle.Render(cardInfo)
@@ -77,6 +75,7 @@ func (v Violet) View() (view string) {
 			tabs = append(tabs, style.Render(env.name))
 		}
 		// This trick is how the "window" effect is realized: "empty tab" to fill the width.
+		commandsWidth := v.layout.commandButtons.width
 		gap := tabGapStyle.Render(strings.Repeat(" ", commandsWidth))
 		tabs = append(tabs, gap)
 		tabHeader := lipgloss.JoinHorizontal(lipgloss.Top, tabs...)

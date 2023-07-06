@@ -14,7 +14,6 @@ var (
 				Background(primaryColor).
 				Bold(true)
 	buttonGroupStyle = lipgloss.NewStyle().
-				MarginLeft(4).
 				Padding(1)
 )
 
@@ -50,7 +49,7 @@ func newCommandButtons() buttonGroup {
 	return buttonGroup{
 		buttons: buttons,
 		// This provides excellent space for each command
-		width: longestCommand * 4,
+		width: longestCommand * 3,
 	}
 }
 
@@ -63,16 +62,9 @@ func (bg *buttonGroup) View(selectedCommand int) string {
 		}
 	}
 
-	// TODO: Hacky to use an invisible button and to hardcode the row items. Is there a better way?
-	invisibleButton := button{}
-	invisibleButton.style = defaultButtonStyle.Copy().
-		Foreground(lipgloss.NoColor{}).
-		Background(lipgloss.NoColor{})
-
+	// TODO: Hacky to hardcode the row items. Is there a better way?
 	topRow := lipgloss.JoinHorizontal(lipgloss.Center, bg.buttons[0].View(), bg.buttons[1].View(), bg.buttons[2].View())
-	bottomRow := lipgloss.JoinHorizontal(lipgloss.Center, bg.buttons[3].View(), bg.buttons[4].View(), invisibleButton.View())
-	// "Align" the bottom row (with only 2 buttons) underneath the top row (with 3 buttons)
-	bottomRow = lipgloss.NewStyle().PaddingLeft(bg.width / 3).Render(bottomRow)
+	bottomRow := lipgloss.JoinHorizontal(lipgloss.Center, bg.buttons[3].View(), bg.buttons[4].View())
 
 	grid := lipgloss.JoinVertical(lipgloss.Center, topRow, bottomRow)
 
