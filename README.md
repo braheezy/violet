@@ -52,7 +52,12 @@ The `Makefile` contains the most common developer actions to perform. See `make 
 ## Roadmap
 - Pagination to handle many environments and/or VMs
 - Error handling: If Vagrant fails, show user the error (or provide a way to get to the error without running Vagrant again)
-- SSH command support
+- Reduce magic numbers in sizing
+- Bulk operations on VMs, including the entire Environment (e.g. `vagrant up` instead of `vagrant up <machine>`)
+- Launch SSH sessions in external apps
+- Current layout won't scale:
+  - More commands
+  - Specific provisioners
 - Better screen resize support
 - Mouse support
 - File logging
