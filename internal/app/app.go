@@ -10,6 +10,7 @@ import (
 	"os"
 
 	"github.com/braheezy/violet/pkg/vagrant"
+	"github.com/charmbracelet/bubbles/help"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -32,6 +33,42 @@ func Run() {
 	p := tea.NewProgram(newViolet(), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		log.Fatalf("Could not start program :(\n%v\n", err)
+	}
+}
+
+// Complete app state (i.e. the BubbleTea model)
+type Violet struct {
+	// Reference to the Ecosystem
+	ecosystem Ecosystem
+	// Fancy help bubble
+	help help.Model
+	// To support help
+	keys helpKeyMap
+	// Spinner to show while commands are running
+	spinner currentSpinner
+	// Current terminal size
+	terminalWidth  int
+	terminalHeight int
+}
+
+// Return the default Violet model
+func newViolet() Violet {
+	client, err := vagrant.NewVagrantClient()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	help := help.New()
+	help.ShowAll = true
+
+	return Violet{
+		ecosystem: Ecosystem{
+			environments: nil,
+			client:       client,
+		},
+		keys:    keys,
+		help:    help,
+		spinner: newSpinner(),
 	}
 }
 
