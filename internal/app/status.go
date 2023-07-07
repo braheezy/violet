@@ -19,7 +19,7 @@ type statusErrMsg struct{ err error }
 
 func (e statusErrMsg) Error() string { return e.err.Error() }
 
-func (v Violet) getVMStatus(identifier string) tea.Cmd {
+func (v *Violet) getVMStatus(identifier string) tea.Cmd {
 	return func() tea.Msg {
 		result, err := v.ecosystem.client.GetStatusForID(identifier)
 
@@ -33,6 +33,29 @@ func (v Violet) getVMStatus(identifier string) tea.Cmd {
 		return statusMsg{
 			identifier: identifier,
 			status:     vmStatus,
+		}
+	}
+}
+
+type envStatusMsg struct {
+	name   string
+	status []vagrant.MachineInfo
+}
+
+func (v *Violet) getEnvStatus(env *Environment) tea.Cmd {
+	return func() tea.Msg {
+		output := make(chan string)
+		go v.RunCommandInProject("status --machine-readable", env.home, output)
+
+		var result string
+		for line := range output {
+			result += line + "\n"
+		}
+
+		newStatus := vagrant.ParseVagrantOutput(result)
+		return envStatusMsg{
+			name:   env.name,
+			status: newStatus,
 		}
 	}
 }

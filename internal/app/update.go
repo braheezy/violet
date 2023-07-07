@@ -20,6 +20,7 @@ type helpKeyMap struct {
 	Execute       key.Binding
 	SelectCommand key.Binding
 	SelectVM      key.Binding
+	Space         key.Binding
 	Help          key.Binding
 	Quit          key.Binding
 }
@@ -57,6 +58,10 @@ var keys = helpKeyMap{
 		key.WithKeys("enter"),
 		key.WithHelp("⏎ enter", "run selected command"),
 	),
+	Space: key.NewBinding(
+		key.WithKeys(" "),
+		key.WithHelp("space", "toggle env/vm"),
+	),
 	Help: key.NewBinding(
 		key.WithKeys("?"),
 		key.WithHelp("?", "toggle help"),
@@ -78,7 +83,7 @@ func (k helpKeyMap) ShortHelp() []key.Binding {
 func (k helpKeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{k.SelectVM, k.SelectCommand, k.Switch}, // first column
-		{k.Execute, k.Help, k.Quit},             // second column
+		{k.Space, k.Execute, k.Help, k.Quit},    // second column
 	}
 }
 
@@ -87,10 +92,22 @@ type runMsg struct {
 	err     error
 }
 
-func (v Violet) getRunCommandOnVM(command string, identifier string) tea.Cmd {
+func (v *Violet) getRunCommandOnVM(command string, identifier string) tea.Cmd {
 	return func() tea.Msg {
 		output := make(chan string)
 		go v.ecosystem.client.RunCommand(fmt.Sprintf("%v %v", command, identifier), output)
+		var content string
+		for value := range output {
+			content += string(value) + "\n"
+		}
+		return runMsg{content: content}
+	}
+}
+
+func (v *Violet) getRunCommandInVagrantProject(command string, dir string) tea.Cmd {
+	return func() tea.Msg {
+		output := make(chan string)
+		go v.RunCommandInProject(command, dir, output)
 		var content string
 		for value := range output {
 			content += string(value) + "\n"
@@ -113,25 +130,47 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, v.keys.Left):
-			if v.getCurrentVM().selectedCommand == 0 {
-				v.getCurrentVM().selectedCommand = len(supportedVagrantCommands) - 1
+			if v.currentEnv().hasFocus {
+				if v.currentEnv().selectedCommand == 0 {
+					v.currentEnv().selectedCommand = len(supportedVagrantCommands) - 1
+				} else {
+					v.currentEnv().selectedCommand--
+				}
 			} else {
-				v.getCurrentVM().selectedCommand--
+				if v.currentVM().selectedCommand == 0 {
+					v.currentVM().selectedCommand = len(supportedVagrantCommands) - 1
+				} else {
+					v.currentVM().selectedCommand--
+				}
 			}
 		case key.Matches(msg, v.keys.Right):
-			if v.getCurrentVM().selectedCommand == len(supportedVagrantCommands)-1 {
-				v.getCurrentVM().selectedCommand = 0
+			if v.currentEnv().hasFocus {
+				if v.currentEnv().selectedCommand == len(supportedVagrantCommands)-1 {
+					v.currentEnv().selectedCommand = 0
+				} else {
+					v.currentEnv().selectedCommand++
+				}
 			} else {
-				v.getCurrentVM().selectedCommand++
+				if v.currentVM().selectedCommand == len(supportedVagrantCommands)-1 {
+					v.currentVM().selectedCommand = 0
+				} else {
+					v.currentVM().selectedCommand++
+				}
 			}
 		case key.Matches(msg, v.keys.Up):
+			if v.currentEnv().hasFocus {
+				break
+			}
 			if v.selectedVM == 0 {
-				v.selectedVM = len(v.ecosystem.environments[v.selectedEnv].VMs) - 1
+				v.selectedVM = len(v.currentEnv().VMs) - 1
 			} else {
 				v.selectedVM -= 1
 			}
 		case key.Matches(msg, v.keys.Down):
-			if v.selectedVM == len(v.ecosystem.environments[v.selectedEnv].VMs)-1 {
+			if v.currentEnv().hasFocus {
+				break
+			}
+			if v.selectedVM == len(v.currentEnv().VMs)-1 {
 				v.selectedVM = 0
 			} else {
 				v.selectedVM += 1
@@ -150,40 +189,50 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				v.selectedEnv -= 1
 			}
 			return v, nil
-
+		case key.Matches(msg, v.keys.Space):
+			v.currentEnv().hasFocus = !v.currentEnv().hasFocus
+			return v, nil
 		case key.Matches(msg, v.keys.Execute):
-			currentVM := v.getCurrentVM()
-			vagrantCommand := supportedVagrantCommands[currentVM.selectedCommand]
-			/*
-				TODO: This doesn't support running commands in a desktop-less environment that doesn't have an external terminal to put commands on. One approach is to use `screen` to create virtual screen.
-
-				Create a virtual screen:
-					screen -dmS <session name> <command>
-				Connect to it:
-					screen -r <session name>
-			*/
-
-			if vagrantCommand == "ssh" {
-				c := exec.Command("vagrant", "ssh", currentVM.machineID)
-				if currentVM.provider == "docker" {
-					c = exec.Command("vagrant", "docker-exec", currentVM.name, "-it", "--", "/bin/sh")
-					c.Dir = currentVM.home
-				}
-				runCommand := tea.ExecProcess(c, func(err error) tea.Msg {
-					return runMsg{content: "", err: err}
-				})
-				return v, runCommand
-			} else {
-				// Run the command async and stream result back
-				runCommand := v.getRunCommandOnVM(
-					vagrantCommand,
-					currentVM.machineID,
-				)
+			if v.currentEnv().hasFocus {
+				vagrantCommand := supportedVagrantCommands[v.currentEnv().selectedCommand]
+				runCommand := v.getRunCommandInVagrantProject(vagrantCommand, v.currentEnv().home)
 				v.layout.spinner.show = true
-				v.layout.spinner.verb = verbs[rand.Intn(len(verbs))]
 				// This must be sent for the spinner to spin
 				tickCmd := v.layout.spinner.spinner.Tick
 				return v, tea.Batch(runCommand, tickCmd)
+			} else {
+				currentVM := v.currentVM()
+				vagrantCommand := supportedVagrantCommands[currentVM.selectedCommand]
+				/*
+					TODO: This doesn't support running commands in a desktop-less environment that doesn't have an external terminal to put commands on. One approach is to use `screen` to create virtual screen.
+
+					Create a virtual screen:
+						screen -dmS <session name> <command>
+					Connect to it:
+						screen -r <session name>
+				*/
+
+				if vagrantCommand == "ssh" {
+					c := exec.Command("vagrant", "ssh", currentVM.machineID)
+					if currentVM.provider == "docker" {
+						c = exec.Command("vagrant", "docker-exec", currentVM.name, "-it", "--", "/bin/sh")
+						c.Dir = currentVM.home
+					}
+					runCommand := tea.ExecProcess(c, func(err error) tea.Msg {
+						return runMsg{content: "", err: err}
+					})
+					return v, runCommand
+				} else {
+					// Run the command async and stream result back
+					runCommand := v.getRunCommandOnVM(
+						vagrantCommand,
+						currentVM.machineID,
+					)
+					v.layout.spinner.show = true
+					// This must be sent for the spinner to spin
+					tickCmd := v.layout.spinner.spinner.Tick
+					return v, tea.Batch(runCommand, tickCmd)
+				}
 			}
 		case key.Matches(msg, v.keys.Help):
 			v.help.ShowAll = !v.help.ShowAll
@@ -195,7 +244,7 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case ecosystemMsg:
 		eco := Ecosystem(msg)
 		var statusCmds []tea.Cmd
-		// Don't have the VM names yet, just machine-ids.
+		// Don't have the VM names yet, just machineIDs.
 		// Queue up a bunch of async calls to go get those names.
 		for _, env := range eco.environments {
 			for _, vm := range env.VMs {
@@ -210,6 +259,7 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// New data about a specific VM has come in
 	case statusMsg:
 		v.layout.spinner.show = false
+		v.layout.spinner.verb = verbs[rand.Intn(len(verbs))]
 		v.layout.spinner.spinner.Spinner = spinners[rand.Intn(len(spinners))]
 		// Find the VM this message is about
 		for i, env := range v.ecosystem.environments {
@@ -231,11 +281,42 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 
+	case envStatusMsg:
+		v.layout.spinner.show = false
+		v.layout.spinner.verb = verbs[rand.Intn(len(verbs))]
+		v.layout.spinner.spinner.Spinner = spinners[rand.Intn(len(spinners))]
+
+		// Find the env this message is about
+		for i, env := range v.ecosystem.environments {
+			if msg.name == env.name {
+				selectedEnv := &v.ecosystem.environments[i]
+				newVMs := make([]VM, 0)
+				for _, vmStatus := range msg.status {
+					newVM := VM{
+						provider: vmStatus.Fields["provider-name"],
+						state:    vmStatus.Fields["state"],
+						home:     selectedEnv.home,
+						name:     vmStatus.Name,
+						// Reset the selected command
+						selectedCommand: 0,
+					}
+					newVMs = append(newVMs, newVM)
+				}
+				selectedEnv.VMs = newVMs
+				break
+			}
+		}
+		return v, nil
+
 	// Result from a command has been streamed in
 	case runMsg:
-		// Getting a runMsg means something happened so run async task to get
-		// new status on the VM the command was just run on.
-		return v, v.getVMStatus(v.getCurrentVM().machineID)
+		if v.currentEnv().hasFocus {
+			return v, v.getEnvStatus(v.currentEnv())
+		} else {
+			// Getting a runMsg means something happened so run async task to get
+			// new status on the VM the command was just run on.
+			return v, v.getVMStatus(v.currentVM().machineID)
+		}
 
 	// TODO: Handle error messages (just throw them in the viewport)
 	case ecosystemErrMsg:
