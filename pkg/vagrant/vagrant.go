@@ -58,72 +58,52 @@ func (c *VagrantClient) GetVersion() (string, error) {
 }
 
 func (c *VagrantClient) GetGlobalStatus() (result string) {
-	output := make(chan string)
-	go c.RunCommand("global-status --machine-readable", output)
+	result, _ = c.RunCommand("global-status --machine-readable")
 
-	for value := range output {
-		result += string(value) + "\n"
-	}
 	return result
 }
 
 func (c *VagrantClient) GetStatusForID(machineID string) (result string, err error) {
-	output := make(chan string)
-	go c.RunCommand(fmt.Sprintf("status %v --machine-readable", machineID), output)
+	result, err = c.RunCommand(fmt.Sprintf("status %v --machine-readable", machineID))
 
-	for value := range output {
-		result += value + "\n"
-	}
-
-	if strings.Contains(result, "Error") {
-		return "", errors.New(result)
+	if err != nil {
+		return "", err
 	}
 	return result, nil
 }
 
 // Run a Vagrant command and stream the result back to caller over outputCh
-func (c *VagrantClient) RunCommand(command string, outputCh chan string) {
+func (c *VagrantClient) RunCommand(command string) (output string, err error) {
 	cmd := exec.Command(c.ExecPath, strings.Split(command, " ")...)
 	cmd.Env = c.Env
 	cmd.Dir = c.WorkingDir
 
-	defer close(outputCh)
-
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		outputCh <- string(fmt.Sprintf("Error getting stdout pipe: %v", err))
+		return "", errors.New("Error creating stdout pipe: " + err.Error())
 	}
 	cmd.Stderr = cmd.Stdout
 
 	scanner := bufio.NewScanner(stdout)
 
-	done := make(chan struct{})
-
 	err = cmd.Start()
 	if err != nil {
-		outputCh <- string(fmt.Sprintf("Error executing: %v", err))
+		return "", errors.New("Error executing: " + err.Error())
 	}
 
 	go func() {
 		for scanner.Scan() {
-			outputCh <- scanner.Text()
+			output += scanner.Text() + "\n"
 		}
-		done <- struct{}{}
 	}()
-
-	<-done
 
 	err = cmd.Wait()
 	if err != nil {
-		outputCh <- string(fmt.Sprintf("Error waiting for the script to complete: %v", err))
+		return "", errors.New("Error waiting for the command to complete:" + err.Error())
 	}
+	return output, nil
 }
 
-// **************************************************************************
-//
-//	Extras. Are these opinionated and don't belong in a public package?
-//
-// **************************************************************************
 // Represents the result of a Vagrant command under the context of a single VM.
 type MachineInfo struct {
 	// Name is the name of the machine.

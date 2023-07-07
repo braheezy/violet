@@ -48,14 +48,9 @@ func TestRunCommand(t *testing.T) {
 	client, _ := NewVagrantClient()
 
 	t.Run("Verify a valid Vagrant command", func(t *testing.T) {
-		output := make(chan string)
-		go client.RunCommand("global-status", output)
+		result, err := client.RunCommand("global-status")
 
-		var result string
-		for value := range output {
-			result += string(value) + "\n"
-		}
-
+		require.Nil(t, err)
 		require.Greater(t, len(result), 40)
 	})
 }
