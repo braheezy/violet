@@ -91,11 +91,24 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	// Window was resized
 	case tea.WindowSizeMsg:
+		// During development, there were horrific UI bugs when the screen was resized. Things would wrap
+		// to the next line. This approach repaints the screen when the happens and it seems to handle all
+		// cases. Hopefully this check is good enough to not spam ClearScreen commands.
+		needsRepaint := false
+
+		if msg.Width < lipgloss.Width(v.ecosystem.View()) {
+			needsRepaint = true
+		}
+
 		// If we set a width on the help menu it can it can gracefully truncate
 		// its view as needed.
 		v.help.Width = msg.Width
 		v.terminalWidth = msg.Width
 		v.terminalHeight = msg.Height
+
+		if needsRepaint {
+			return v, tea.ClearScreen
+		}
 
 	// User pressed a key
 	case tea.KeyMsg:
