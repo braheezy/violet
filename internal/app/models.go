@@ -2,6 +2,7 @@ package app
 
 import (
 	"log"
+	"strings"
 
 	"github.com/braheezy/violet/pkg/vagrant"
 	"github.com/charmbracelet/bubbles/help"
@@ -10,13 +11,6 @@ import (
 
 // Order matters here.
 var supportedVagrantCommands = []string{"up", "halt", "ssh", "reload", "provision"}
-
-type Layout struct {
-	// Spinner to show while commands are running
-	spinner currentSpinner
-	// Buttons to allow the user to run commands
-	commandButtons buttonGroup
-}
 
 // Environment represents a single Vagrant project
 type Environment struct {
@@ -67,11 +61,11 @@ type Violet struct {
 	help help.Model
 	// To support help
 	keys helpKeyMap
+	// Spinner to show while commands are running
+	spinner currentSpinner
 	// Indexes of the respective lists that are currently selected.
 	selectedEnv int
 	selectedVM  int
-	// Current layout to use
-	layout Layout
 	// Current terminal size
 	terminalWidth  int
 	terminalHeight int
@@ -96,10 +90,7 @@ func newViolet() Violet {
 		help:        help,
 		selectedEnv: 0,
 		selectedVM:  0,
-		layout: Layout{
-			spinner:        newSpinner(),
-			commandButtons: newCommandButtons(),
-		},
+		spinner:     newSpinner(),
 	}
 }
 
@@ -110,4 +101,66 @@ func (v *Violet) currentVM() *VM {
 
 func (v *Violet) currentEnv() *Environment {
 	return &v.ecosystem.environments[v.selectedEnv]
+}
+
+func (e *Ecosystem) View(selectedEnvIndex int, selectedMachineIndex int) (result string) {
+	// vmCards will be the set of VMs to show for the selected env.
+	// They are dealt with first so we know the size of content we need to
+	// wrap in "tabs"
+	vmCards := []string{}
+	selectedEnv := e.environments[selectedEnvIndex]
+	for i, vm := range selectedEnv.VMs {
+		// "Viewing" a VM will get it's specific info
+		vmInfo := vm.View()
+		// Commands are the same for everyone so they are grabbed from the main model
+		commands := e.commandButtons.View(vm.selectedCommand)
+		cardInfo := lipgloss.JoinHorizontal(lipgloss.Center, vmInfo, commands)
+		if !selectedEnv.hasFocus && i == selectedMachineIndex {
+			cardInfo = selectedCardStyle.Render(cardInfo)
+		}
+		vmCards = append(vmCards, cardInfo)
+
+		// This card always exists and controls the top-level environment
+		envTitle := envCardTitleStyle.Render(selectedEnv.name)
+		envCommands := e.commandButtons.View(selectedEnv.selectedCommand)
+		if selectedEnv.hasFocus {
+			envTitle = selectedEnvCardStyle.Render(selectedEnv.name)
+		}
+		envCard := lipgloss.JoinHorizontal(lipgloss.Center, envTitle, envCommands)
+
+		tabContent := envCard + "\n" + strings.Join(vmCards, "\n")
+
+		// Now create the tab headers, one for each environment.
+		var tabs []string
+		for i, env := range e.environments {
+			// Figure out which "tab" is selected and stylize accordingly
+			var style lipgloss.Style
+			isFirst, _, isActive := i == 0, i == len(e.environments)-1, i == selectedEnvIndex
+			if isActive {
+				style = activeTabStyle.Copy()
+			} else {
+				style = inactiveTabStyle.Copy()
+			}
+			border, _, _, _, _ := style.GetBorder()
+			// Override border edges for these edge cases
+			if isFirst && isActive {
+				border.BottomLeft = "│"
+			} else if isFirst && !isActive {
+				border.BottomLeft = "├"
+			}
+			style = style.Border(border)
+			tabs = append(tabs, style.Render(env.name))
+		}
+		// Create the window effect by creating a blank tab to fill the rest of the width.
+		commandsWidth := e.commandButtons.width
+		gap := tabGapStyle.Render(strings.Repeat(" ", commandsWidth))
+		tabs = append(tabs, gap)
+		tabHeader := lipgloss.JoinHorizontal(lipgloss.Top, tabs...)
+
+		// Not rendering the top left corder of window border, account for it with magic 2 :(
+		tabWindowStyle = tabWindowStyle.Width(lipgloss.Width(tabHeader) - 2)
+		result = lipgloss.JoinVertical(lipgloss.Left, tabHeader, tabWindowStyle.Render(tabContent))
+		result = lipgloss.NewStyle().Padding(0, 2).Render(result)
+	}
+	return result
 }

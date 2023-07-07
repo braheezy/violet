@@ -166,9 +166,9 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if v.currentEnv().hasFocus {
 				vagrantCommand := supportedVagrantCommands[v.currentEnv().selectedCommand]
 				runCommand := v.createEnvRunCmd(vagrantCommand, v.currentEnv().home)
-				v.layout.spinner.show = true
+				v.spinner.show = true
 				// This must be sent for the spinner to spin
-				tickCmd := v.layout.spinner.spinner.Tick
+				tickCmd := v.spinner.spinner.Tick
 				return v, tea.Batch(runCommand, tickCmd)
 			} else {
 				currentVM := v.currentVM()
@@ -198,9 +198,9 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						vagrantCommand,
 						currentVM.machineID,
 					)
-					v.layout.spinner.show = true
+					v.spinner.show = true
 					// This must be sent for the spinner to spin
-					tickCmd := v.layout.spinner.spinner.Tick
+					tickCmd := v.spinner.spinner.Tick
 					return v, tea.Batch(runCommand, tickCmd)
 				}
 			}
@@ -228,9 +228,9 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	// New data about a specific VM has come in
 	case machineStatusMsg:
-		v.layout.spinner.show = false
-		v.layout.spinner.verb = verbs[rand.Intn(len(verbs))]
-		v.layout.spinner.spinner.Spinner = spinners[rand.Intn(len(spinners))]
+		v.spinner.show = false
+		v.spinner.verb = verbs[rand.Intn(len(verbs))]
+		v.spinner.spinner.Spinner = spinners[rand.Intn(len(spinners))]
 		// Find the VM this message is about
 		for i, env := range v.ecosystem.environments {
 			for j, vm := range env.VMs {
@@ -252,9 +252,9 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case envStatusMsg:
-		v.layout.spinner.show = false
-		v.layout.spinner.verb = verbs[rand.Intn(len(verbs))]
-		v.layout.spinner.spinner.Spinner = spinners[rand.Intn(len(spinners))]
+		v.spinner.show = false
+		v.spinner.verb = verbs[rand.Intn(len(verbs))]
+		v.spinner.spinner.Spinner = spinners[rand.Intn(len(spinners))]
 
 		// Find the env this message is about
 		for i, env := range v.ecosystem.environments {
@@ -293,12 +293,11 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case statusErrMsg:
 	}
 
-	if v.layout.spinner.show {
+	if v.spinner.show {
 		var spinCmd tea.Cmd
-		v.layout.spinner.spinner, spinCmd = v.layout.spinner.spinner.Update(msg)
+		v.spinner.spinner, spinCmd = v.spinner.spinner.Update(msg)
 		return v, spinCmd
 	}
 
 	return v, nil
-
 }

@@ -13,6 +13,8 @@ type Ecosystem struct {
 	environments []Environment
 	// Reference to a Vagrant client to run commands with
 	client *vagrant.VagrantClient
+	// Buttons to allow the user to run commands
+	commandButtons buttonGroup
 }
 
 // Updates for the entire ecosystem. Usually with results from `global-status`
@@ -59,7 +61,8 @@ func createEcosystem(client *vagrant.VagrantClient) (Ecosystem, error) {
 		environments = append(environments, env)
 	}
 	return Ecosystem{
-		environments: environments,
-		client:       client,
+		environments:   environments,
+		client:         client,
+		commandButtons: newCommandButtons(),
 	}, nil
 }
