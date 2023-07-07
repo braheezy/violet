@@ -6,6 +6,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 // helpKeyMap defines a set of keybindings.
@@ -29,7 +30,7 @@ type helpKeyMap struct {
 var keys = helpKeyMap{
 	SelectCommand: key.NewBinding(
 		key.WithKeys("left", "h", "right", "l"),
-		key.WithHelp("←/h →/l", "select command"),
+		key.WithHelp("←/h →/l", "pick command"),
 	),
 	Up: key.NewBinding(
 		key.WithKeys("up", "k"),
@@ -45,14 +46,14 @@ var keys = helpKeyMap{
 	),
 	Switch: key.NewBinding(
 		key.WithKeys("tab", "shift+tab"),
-		key.WithHelp("⭾ tab/⇧+⭾", "switch env tab"),
+		key.WithHelp("⭾/⇧+⭾", "env tab"),
 	),
 	ShiftTab: key.NewBinding(
 		key.WithKeys("shift+tab"),
 	),
 	Execute: key.NewBinding(
 		key.WithKeys("enter"),
-		key.WithHelp("⏎ enter", "run selected command"),
+		key.WithHelp("⏎", "run"),
 	),
 	Space: key.NewBinding(
 		key.WithKeys(" "),
@@ -68,7 +69,7 @@ var keys = helpKeyMap{
 	),
 	SelectMachine: key.NewBinding(
 		key.WithKeys("up", "k", "down", "j"),
-		key.WithHelp("↑/k ↓/j", "select vm"),
+		key.WithHelp("↑/k ↓/j", "pick vm"),
 	),
 }
 

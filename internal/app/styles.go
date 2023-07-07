@@ -83,12 +83,16 @@ var (
 	cardProviderStyle = lipgloss.NewStyle().
 				Faint(true).
 				Italic(true).
-				MarginLeft(marginHorizontal).
+				MarginLeft(marginHorizontal + 2).
 				Foreground(textColor)
-	selectedCardStyle = lipgloss.NewStyle().
+	defaultCardStyle = lipgloss.NewStyle().
+				Border(lipgloss.NormalBorder(), false, false, false, false).
+				MarginLeft(1)
+	selectedCardStyle = defaultCardStyle.Copy().
+				BorderLeft(true).
 				Border(lipgloss.NormalBorder(), false, false, false, true).
 				BorderForeground(accentColor).
-				MarginLeft(marginHorizontal)
+				MarginLeft(0)
 
 	envCardTitleStyle    = cardTitleStyle.Copy()
 	selectedEnvCardStyle = lipgloss.NewStyle().

@@ -22,17 +22,13 @@ func (v Violet) View() (view string) {
 	view += lipgloss.NewStyle().Margin(marginVertical, marginHorizontal).Render(titleGreeter)
 
 	help := v.help.View(v.keys)
-	view += lipgloss.NewStyle().Margin(marginVertical, marginHorizontal).Render(help)
-	view += "\n\n"
+	view += lipgloss.NewStyle().
+		Margin(marginVertical, marginHorizontal).
+		Render(help)
+	view += "\n"
 
 	// Show the current environments
-	envArea := ""
-	if v.ecosystem.environments == nil {
-		envArea += "No environments found :("
-	} else {
-		envArea += v.ecosystem.View()
-	}
-	view += envArea
+	view += v.ecosystem.View()
 	view += "\n\n"
 
 	if v.spinner.show {

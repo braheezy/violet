@@ -81,6 +81,10 @@ func (e *Ecosystem) currentEnv() *Environment {
 }
 
 func (e *Ecosystem) View() (result string) {
+	if e.environments == nil {
+		return "No environments found :("
+	}
+
 	// machineCards will be the set of machines to show for the selected env.
 	// They are dealt with first so we know the size of content we need to
 	// wrap in "tabs"
@@ -91,9 +95,11 @@ func (e *Ecosystem) View() (result string) {
 		machineView := machine.View()
 		// Commands are the same for everyone so they are grabbed from the main model
 		commands := e.commandButtons.View(machine.selectedCommand)
-		cardInfo := lipgloss.JoinHorizontal(lipgloss.Center, machineView, commands)
+		cardInfo := lipgloss.JoinHorizontal(lipgloss.Top, machineView, commands)
 		if !selectedEnv.hasFocus && i == e.selectedMachine {
 			cardInfo = selectedCardStyle.Render(cardInfo)
+		} else {
+			cardInfo = defaultCardStyle.Render(cardInfo)
 		}
 		machineCards = append(machineCards, cardInfo)
 
@@ -128,16 +134,15 @@ func (e *Ecosystem) View() (result string) {
 			style = style.Border(border)
 			tabs = append(tabs, style.Render(env.name))
 		}
-		// Create the window effect by creating a blank tab to fill the rest of the width.
-		commandsWidth := e.commandButtons.width
-		gap := tabGapStyle.Render(strings.Repeat(" ", commandsWidth))
-		tabs = append(tabs, gap)
-		tabHeader := lipgloss.JoinHorizontal(lipgloss.Top, tabs...)
 
-		// Not rendering the top left corder of window border, account for it with magic 2 :(
-		tabWindowStyle = tabWindowStyle.Width(lipgloss.Width(tabHeader) - 2)
+		tabHeader := lipgloss.JoinHorizontal(lipgloss.Top, tabs...)
+		// Create the window effect by creating a blank tab to fill the rest of the width.
+		gapWidth := lipgloss.Width(tabContent) - lipgloss.Width(tabHeader)
+		gap := tabGapStyle.Render(strings.Repeat(" ", gapWidth))
+		tabHeader = lipgloss.JoinHorizontal(lipgloss.Top, tabHeader, gap)
+
 		result = lipgloss.JoinVertical(lipgloss.Left, tabHeader, tabWindowStyle.Render(tabContent))
-		result = lipgloss.NewStyle().Padding(0, 2).Render(result)
+
 	}
 	return result
 }

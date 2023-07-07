@@ -14,7 +14,7 @@ var (
 				Background(primaryColor).
 				Bold(true)
 	buttonGroupStyle = lipgloss.NewStyle().
-				Padding(1)
+				Margin(marginVertical, 0, marginVertical, marginHorizontal*2)
 )
 
 type button struct {
