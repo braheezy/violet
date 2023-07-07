@@ -111,9 +111,3 @@ func (v *Violet) currentVM() *VM {
 func (v *Violet) currentEnv() *Environment {
 	return &v.ecosystem.environments[v.selectedEnv]
 }
-
-func (v *Violet) RunCommandInProject(command string, dir string, outputCh chan string) {
-	v.ecosystem.client.WorkingDir = dir
-	v.ecosystem.client.RunCommand(command, outputCh)
-	v.ecosystem.client.WorkingDir = ""
-}

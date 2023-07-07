@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"math/rand"
 	"os/exec"
 
@@ -84,35 +83,6 @@ func (k helpKeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{k.SelectVM, k.SelectCommand, k.Switch}, // first column
 		{k.Space, k.Execute, k.Help, k.Quit},    // second column
-	}
-}
-
-type runMsg struct {
-	content string
-	err     error
-}
-
-func (v *Violet) getRunCommandOnVM(command string, identifier string) tea.Cmd {
-	return func() tea.Msg {
-		output := make(chan string)
-		go v.ecosystem.client.RunCommand(fmt.Sprintf("%v %v", command, identifier), output)
-		var content string
-		for value := range output {
-			content += string(value) + "\n"
-		}
-		return runMsg{content: content}
-	}
-}
-
-func (v *Violet) getRunCommandInVagrantProject(command string, dir string) tea.Cmd {
-	return func() tea.Msg {
-		output := make(chan string)
-		go v.RunCommandInProject(command, dir, output)
-		var content string
-		for value := range output {
-			content += string(value) + "\n"
-		}
-		return runMsg{content: content}
 	}
 }
 

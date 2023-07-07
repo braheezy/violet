@@ -1,11 +1,39 @@
 package app
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/braheezy/violet/pkg/vagrant"
 	tea "github.com/charmbracelet/bubbletea"
 )
+
+func (v *Violet) RunCommandInProject(command string, dir string) (output string, err error) {
+	v.ecosystem.client.WorkingDir = dir
+	output, _ = v.ecosystem.client.RunCommand(command)
+	v.ecosystem.client.WorkingDir = ""
+	return output, nil
+}
+
+type runMsg struct {
+	content string
+	err     error
+}
+
+func (v *Violet) getRunCommandOnVM(command string, identifier string) tea.Cmd {
+	return func() tea.Msg {
+		content, _ := v.ecosystem.client.RunCommand(fmt.Sprintf("%v %v", command, identifier))
+		return runMsg{content: content}
+	}
+}
+
+func (v *Violet) getRunCommandInVagrantProject(command string, dir string) tea.Cmd {
+	return func() tea.Msg {
+		content, _ := v.RunCommandInProject(command, dir)
+
+		return runMsg{content: content}
+	}
+}
 
 // Status messages get emitted on a per-VM basis
 type statusMsg struct {
@@ -44,13 +72,7 @@ type envStatusMsg struct {
 
 func (v *Violet) getEnvStatus(env *Environment) tea.Cmd {
 	return func() tea.Msg {
-		output := make(chan string)
-		go v.RunCommandInProject("status --machine-readable", env.home, output)
-
-		var result string
-		for line := range output {
-			result += line + "\n"
-		}
+		result, _ := v.RunCommandInProject("status --machine-readable", env.home)
 
 		newStatus := vagrant.ParseVagrantOutput(result)
 		return envStatusMsg{
