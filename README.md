@@ -54,7 +54,7 @@ In somewhat priority order:
 - [ ] Support destroy
 - [ ] Reduce magic numbers in sizing
 - [ ] Better screen resize support and smarter app sizing in general
-- [ ] Bulk operations on VMs, including the entire Environment (e.g. `vagrant up` instead of `vagrant up <machine>`)
+- [x] Bulk operations on VMs, including the entire Environment (e.g. `vagrant up` instead of `vagrant up <machine>`)
 - [ ] Current layout won't scale to handle more elements like:
   - More commands
   - Specific provisioners
@@ -66,9 +66,14 @@ In somewhat priority order:
 - [ ] Load VMs and Envs deterministically
 - [ ] Launch SSH sessions in external apps
 - [ ] Mouse support
+- [ ] Add VHS to CI
 - [ ] Configuration w/ cobra for Env Vars, CLI, and config file:
   - Theme
   - Log control
 
 ## Inspiration
 My interest in TUI applications is growing and I wanted something more complicated and useful (than a [game](https://github.com/braheezy/hangman)) to build. And I got to a learn lots of Go!
+
+## Refactor
+Seeing that stream commands is not a thing, the use of channels in RunCommand is probably not needed.
+Create file in app package that is the middleware layer to the Vagrant package. Vagrat
