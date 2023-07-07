@@ -57,7 +57,6 @@ func (c *VagrantClient) GetVersion() (string, error) {
 	return version, nil
 }
 
-// GetGlobalStatus
 func (c *VagrantClient) GetGlobalStatus() (result string) {
 	output := make(chan string)
 	go c.RunCommand("global-status --machine-readable", output)
@@ -73,7 +72,7 @@ func (c *VagrantClient) GetStatusForID(machineID string) (result string, err err
 	go c.RunCommand(fmt.Sprintf("status %v --machine-readable", machineID), output)
 
 	for value := range output {
-		result += string(value) + "\n"
+		result += value + "\n"
 	}
 
 	if strings.Contains(result, "Error") {

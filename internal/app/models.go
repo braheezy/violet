@@ -43,7 +43,7 @@ type VM struct {
 
 func (vm *VM) View() string {
 	displayName := vm.name
-	// If there's no name yet, at least show the machine-id
+	// If there's no name yet, at least show the machineID
 	if displayName == "" {
 		displayName = vm.machineID
 	}
