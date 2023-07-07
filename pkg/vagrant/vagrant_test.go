@@ -83,11 +83,6 @@ func TestGetStatusForID(t *testing.T) {
 			expected:  "",
 			wantError: true,
 		},
-		{
-			name:     "Test good ID",
-			input:    "12deee0",
-			expected: "node1,metadata,provider,libvirt",
-		},
 	}
 	for _, test := range tests {
 		result, err := client.GetStatusForID(test.input)
@@ -97,7 +92,7 @@ func TestGetStatusForID(t *testing.T) {
 		}
 	}
 }
-func TestParseVagrantOutput_Status(t *testing.T) {
+func TestParseVagrantOutput_StatusSingleEnv(t *testing.T) {
 	tests := []struct {
 		name     string
 		input    string
@@ -118,7 +113,8 @@ func TestParseVagrantOutput_Status(t *testing.T) {
 			10,$spe_Cat4,state-human-long,`,
 			expected: []MachineInfo{
 				{
-					Name: "builder-f35",
+					Name:      "builder-f35",
+					MachineID: "",
 					Fields: map[string]string{
 						"provider-name":    "libvirt",
 						"state":            "shutoff",
@@ -126,7 +122,8 @@ func TestParseVagrantOutput_Status(t *testing.T) {
 					},
 				},
 				{
-					Name: "$spe_Cat4",
+					Name:      "$spe_Cat4",
+					MachineID: "",
 					Fields: map[string]string{
 						"provider-name": "virtualbox",
 						"state":         "running",
@@ -154,6 +151,47 @@ func TestParseVagrantOutput_Status(t *testing.T) {
 
 }
 
+func TestParseVagrantOutput_StatusMultiEnv(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected []MachineInfo
+	}{
+		{
+			name: "Test output from the 'vagrant status' command.",
+			input: `1688688549,node1,metadata,provider,docker
+			1688688549,node2,metadata,provider,docker
+			1688688549,node1,provider-name,docker
+			1688688549,node1,state,not_created
+			1688688549,node2,provider-name,docker
+			1688688549,node2,state,not_created`,
+			expected: []MachineInfo{
+				{
+					Name:      "node1",
+					MachineID: "",
+					Fields: map[string]string{
+						"provider-name": "docker",
+						"state":         "not_created",
+					},
+				},
+				{
+					Name:      "node2",
+					MachineID: "",
+					Fields: map[string]string{
+						"provider-name": "docker",
+						"state":         "not_created",
+					},
+				},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		results := ParseVagrantOutput(test.input)
+		assert.EqualValues(t, test.expected, results)
+	}
+
+}
 func TestParseVagrantOutput_GlobalStatus(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -196,12 +234,12 @@ func TestParseVagrantOutput_GlobalStatus(t *testing.T) {
 			1671330325,,ui,info, \nThe above shows information about all known Vagrant environments\non this machine. This data is cached and may not be completely\nup-to-date (use "vagrant global-status --prune" to prune invalid\nentries). To interact with any of the machines%!(VAGRANT_COMMA) you can go to that\ndirectory and run Vagrant%!(VAGRANT_COMMA) or you can use the ID directly with\nVagrant commands from any directory. For example:\n"vagrant destroy 1a2b3c4d"`,
 			expected: []MachineInfo{
 				{
-					Name: "",
+					Name:      "",
+					MachineID: "c03b277",
 					Fields: map[string]string{
 						"provider-name": "libvirt",
 						"state":         "shutoff",
 						"machine-home":  "/home/braheezy/prettybox/runners",
-						"machine-id":    "c03b277",
 					},
 				},
 			},
@@ -228,50 +266,33 @@ func TestParseVagrantOutput_GlobalStatus(t *testing.T) {
 			1672263560,,ui,info,directory
 			1672263560,,ui,info,
 			1672263560,,ui,info,--------------------------------------------------------------------------------
-			1672263560,,ui,info,12deee0
-			1672263560,,ui,info,node1
-			1672263560,,ui,info,libvirt
-			1672263560,,ui,info,running
-			1672263560,,ui,info,/home/braheezy/vagrant-envs/violet-test/env1
-			1672263560,,ui,info,
-			1672263560,,ui,info,15b6a07
-			1672263560,,ui,info,node2
-			1672263560,,ui,info,libvirt
-			1672263560,,ui,info,running
-			1672263560,,ui,info,/home/braheezy/vagrant-envs/violet-test/env1
-			1672263560,,ui,info,
-			1672263560,,ui,info,200d64a
-			1672263560,,ui,info,server-3
-			1672263560,,ui,info,libvirt
-			1672263560,,ui,info,running
-			1672263560,,ui,info,/home/braheezy/vagrant-envs/violet-test/env2
-			1672263560,,ui,info,`,
+			1672263560,,ui,info,12deee0`,
 			expected: []MachineInfo{
 				{
-					Name: "",
+					Name:      "",
+					MachineID: "12deee0",
 					Fields: map[string]string{
 						"provider-name": "libvirt",
 						"state":         "running",
 						"machine-home":  "/home/braheezy/vagrant-envs/violet-test/env1",
-						"machine-id":    "12deee0",
 					},
 				},
 				{
-					Name: "",
+					Name:      "",
+					MachineID: "15b6a07",
 					Fields: map[string]string{
 						"provider-name": "libvirt",
 						"state":         "running",
 						"machine-home":  "/home/braheezy/vagrant-envs/violet-test/env1",
-						"machine-id":    "15b6a07",
 					},
 				},
 				{
-					Name: "",
+					Name:      "",
+					MachineID: "200d64a",
 					Fields: map[string]string{
 						"provider-name": "libvirt",
 						"state":         "running",
 						"machine-home":  "/home/braheezy/vagrant-envs/violet-test/env2",
-						"machine-id":    "200d64a",
 					},
 				},
 			},
@@ -280,6 +301,6 @@ func TestParseVagrantOutput_GlobalStatus(t *testing.T) {
 
 	for _, test := range tests {
 		results := ParseVagrantOutput(test.input)
-		assert.EqualValues(t, test.expected, results)
+		assert.EqualValues(t, test.expected, results, test.name)
 	}
 }

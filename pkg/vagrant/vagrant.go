@@ -126,8 +126,22 @@ func (c *VagrantClient) RunCommand(command string, outputCh chan string) {
 type MachineInfo struct {
 	// Name is the name of the machine.
 	Name string
+	// MachineID is the unique ID of the machine.
+	MachineID string
 	// Fields is a map of field names to field values.
 	Fields map[string]string
+}
+
+func Contains(slice []MachineInfo, item MachineInfo) bool {
+	for _, s := range slice {
+		if len(s.MachineID) > 0 && s.MachineID == item.MachineID {
+			return true
+		}
+		if len(s.Name) > 0 && s.Name == item.Name {
+			return true
+		}
+	}
+	return false
 }
 
 // Generically parses the output from a Vagrant command and returns the result.
@@ -148,6 +162,14 @@ func ParseVagrantOutput(output string) []MachineInfo {
 		matched := false
 		for field, re := range fields {
 			if m := re.FindStringSubmatch(line); m != nil {
+				for _, r := range results {
+					if r.Name == m[1] && r.Name != "" {
+						if !Contains(results, result) {
+							results = append(results, result)
+						}
+						result = r
+					}
+				}
 				// metadata lines de-lineate VMs and are a good place to grab the name.
 				if field == "metadata" {
 					// Save name if it's the first we've seen
@@ -158,11 +180,14 @@ func ParseVagrantOutput(output string) []MachineInfo {
 						results = append(results, result)
 						result = MachineInfo{Name: m[1], Fields: make(map[string]string)}
 					}
-				} else if field == "machine-id" && result.Fields["machine-id"] != "" {
-					// New VM found. Create new Result
-					results = append(results, result)
-					result = MachineInfo{Name: m[1], Fields: make(map[string]string)}
-					result.Fields[field] = m[2]
+				} else if field == "machine-id" {
+					if result.MachineID != "" {
+						// New VM found. Create new Result
+						results = append(results, result)
+						result = MachineInfo{Name: m[1], MachineID: m[2], Fields: make(map[string]string)}
+					} else {
+						result.MachineID = m[2]
+					}
 				} else {
 					// Update the result with the field value.
 					result.Fields[field] = m[2]
@@ -178,7 +203,7 @@ func ParseVagrantOutput(output string) []MachineInfo {
 		}
 	}
 	// Add the last result
-	if len(result.Fields) != 0 {
+	if len(result.Fields) != 0 && !Contains(results, result) {
 		results = append(results, result)
 	}
 	return results
