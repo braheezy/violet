@@ -36,8 +36,8 @@ func (v Violet) View() (view string) {
 	view += "\n\n"
 
 	if v.spinner.show {
-		commandIndex := v.ecosystem.currentVM().selectedCommand
-		targetName := v.ecosystem.currentVM().name
+		commandIndex := v.ecosystem.currentMachine().selectedCommand
+		targetName := v.ecosystem.currentMachine().name
 		if v.ecosystem.currentEnv().hasFocus {
 			commandIndex = v.ecosystem.currentEnv().selectedCommand
 			targetName = v.ecosystem.currentEnv().name

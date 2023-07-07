@@ -64,12 +64,12 @@ func (v *Violet) createMachineStatusCmd(identifier string) tea.Cmd {
 			return statusErrMsg{err}
 		}
 
-		vmStatus := vagrant.ParseVagrantOutput(result)[0]
-		vmStatus.Fields["state"] = strings.Replace(vmStatus.Fields["state"], "_", " ", -1)
+		machineStatus := vagrant.ParseVagrantOutput(result)[0]
+		machineStatus.Fields["state"] = strings.Replace(machineStatus.Fields["state"], "_", " ", -1)
 
 		return machineStatusMsg{
 			identifier: identifier,
-			status:     vmStatus,
+			status:     machineStatus,
 		}
 	}
 }

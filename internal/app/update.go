@@ -18,18 +18,15 @@ type helpKeyMap struct {
 	ShiftTab      key.Binding
 	Execute       key.Binding
 	SelectCommand key.Binding
-	SelectVM      key.Binding
 	Space         key.Binding
 	Help          key.Binding
 	Quit          key.Binding
+	// These are defined to assist with help text.
+	SelectMachine key.Binding
 }
 
 // Setup the keybinding and help text for each key
 var keys = helpKeyMap{
-	SelectVM: key.NewBinding(
-		key.WithKeys("up", "k", "down", "j"),
-		key.WithHelp("↑/k ↓/j", "select vm"),
-	),
 	SelectCommand: key.NewBinding(
 		key.WithKeys("left", "h", "right", "l"),
 		key.WithHelp("←/h →/l", "select command"),
@@ -69,6 +66,10 @@ var keys = helpKeyMap{
 		key.WithKeys("q", "esc", "ctrl+c"),
 		key.WithHelp("q", "quit"),
 	),
+	SelectMachine: key.NewBinding(
+		key.WithKeys("up", "k", "down", "j"),
+		key.WithHelp("↑/k ↓/j", "select vm"),
+	),
 }
 
 // ShortHelp returns keybindings to be shown in the mini help view. It's part
@@ -81,8 +82,8 @@ func (k helpKeyMap) ShortHelp() []key.Binding {
 // key.Map interface.
 func (k helpKeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
-		{k.SelectVM, k.SelectCommand, k.Switch}, // first column
-		{k.Space, k.Execute, k.Help, k.Quit},    // second column
+		{k.SelectMachine, k.SelectCommand, k.Switch}, // first column
+		{k.Space, k.Execute, k.Help, k.Quit},         // second column
 	}
 }
 
@@ -101,7 +102,7 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch {
 		case key.Matches(msg, v.keys.Left):
 			currentEnv := v.ecosystem.currentEnv()
-			currentMachine := v.ecosystem.currentVM()
+			currentMachine := v.ecosystem.currentMachine()
 			if currentEnv.hasFocus {
 				if currentEnv.selectedCommand == 0 {
 					currentEnv.selectedCommand = len(supportedVagrantCommands) - 1
@@ -117,7 +118,7 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case key.Matches(msg, v.keys.Right):
 			currentEnv := v.ecosystem.currentEnv()
-			currentMachine := v.ecosystem.currentVM()
+			currentMachine := v.ecosystem.currentMachine()
 			if currentEnv.hasFocus {
 				if currentEnv.selectedCommand == len(supportedVagrantCommands)-1 {
 					currentEnv.selectedCommand = 0
@@ -135,19 +136,19 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if v.ecosystem.currentEnv().hasFocus {
 				break
 			}
-			if v.ecosystem.selectedVM == 0 {
-				v.ecosystem.selectedVM = len(v.ecosystem.currentEnv().VMs) - 1
+			if v.ecosystem.selectedMachine == 0 {
+				v.ecosystem.selectedMachine = len(v.ecosystem.currentEnv().machines) - 1
 			} else {
-				v.ecosystem.selectedVM -= 1
+				v.ecosystem.selectedMachine -= 1
 			}
 		case key.Matches(msg, v.keys.Down):
 			if v.ecosystem.currentEnv().hasFocus {
 				break
 			}
-			if v.ecosystem.selectedVM == len(v.ecosystem.currentEnv().VMs)-1 {
-				v.ecosystem.selectedVM = 0
+			if v.ecosystem.selectedMachine == len(v.ecosystem.currentEnv().machines)-1 {
+				v.ecosystem.selectedMachine = 0
 			} else {
-				v.ecosystem.selectedVM += 1
+				v.ecosystem.selectedMachine += 1
 			}
 		case key.Matches(msg, v.keys.Switch):
 			if v.ecosystem.selectedEnv == len(v.ecosystem.environments)-1 {
@@ -175,8 +176,8 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				tickCmd := v.spinner.spinner.Tick
 				return v, tea.Batch(runCommand, tickCmd)
 			} else {
-				currentVM := v.ecosystem.currentVM()
-				vagrantCommand := supportedVagrantCommands[currentVM.selectedCommand]
+				currentMachine := v.ecosystem.currentMachine()
+				vagrantCommand := supportedVagrantCommands[currentMachine.selectedCommand]
 				/*
 					TODO: This doesn't support running commands in a desktop-less environment that doesn't have an external terminal to put commands on. One approach is to use `screen` to create virtual screen.
 
@@ -187,10 +188,10 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				*/
 
 				if vagrantCommand == "ssh" {
-					c := exec.Command("vagrant", "ssh", currentVM.machineID)
-					if currentVM.provider == "docker" {
-						c = exec.Command("vagrant", "docker-exec", currentVM.name, "-it", "--", "/bin/sh")
-						c.Dir = currentVM.home
+					c := exec.Command("vagrant", "ssh", currentMachine.machineID)
+					if currentMachine.provider == "docker" {
+						c = exec.Command("vagrant", "docker-exec", currentMachine.name, "-it", "--", "/bin/sh")
+						c.Dir = currentMachine.home
 					}
 					runCommand := tea.ExecProcess(c, func(err error) tea.Msg {
 						return runMsg{content: "", err: err}
@@ -200,7 +201,7 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					// Run the command async and stream result back
 					runCommand := v.createMachineRunCmd(
 						vagrantCommand,
-						currentVM.machineID,
+						currentMachine.machineID,
 					)
 					v.spinner.show = true
 					// This must be sent for the spinner to spin
@@ -218,11 +219,11 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case ecosystemMsg:
 		eco := Ecosystem(msg)
 		var statusCmds []tea.Cmd
-		// Don't have the VM names yet, just machineIDs.
+		// Don't have the machine names yet, just machineIDs.
 		// Queue up a bunch of async calls to go get those names.
 		for _, env := range eco.environments {
-			for _, vm := range env.VMs {
-				statusCmds = append(statusCmds, v.createMachineStatusCmd(vm.machineID))
+			for _, machine := range env.machines {
+				statusCmds = append(statusCmds, v.createMachineStatusCmd(machine.machineID))
 			}
 		}
 		// Set the new ecosystem
@@ -230,27 +231,27 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		return v, tea.Batch(statusCmds...)
 
-	// New data about a specific VM has come in
+	// New data about a specific machine has come in
 	case machineStatusMsg:
 		v.spinner.show = false
 		v.spinner.verb = verbs[rand.Intn(len(verbs))]
 		v.spinner.spinner.Spinner = spinners[rand.Intn(len(spinners))]
-		// Find the VM this message is about
+		// Find the machine this message is about
 		for i, env := range v.ecosystem.environments {
-			for j, vm := range env.VMs {
-				if msg.identifier == vm.machineID || msg.identifier == vm.name {
-					// Found the VM this status message is about.
+			for j, machine := range env.machines {
+				if msg.identifier == machine.machineID || msg.identifier == machine.name {
+					// Found the machine this status message is about.
 					// Status msgs don't return some info so retain existing info
-					updatedVM := VM{
-						machineID: vm.machineID,
+					updateMachine := Machine{
+						machineID: machine.machineID,
 						provider:  msg.status.Fields["provider-name"],
 						state:     msg.status.Fields["state"],
-						home:      vm.home,
+						home:      machine.home,
 						name:      msg.status.Name,
 						// Reset the selected command
 						selectedCommand: 0,
 					}
-					v.ecosystem.environments[i].VMs[j] = updatedVM
+					v.ecosystem.environments[i].machines[j] = updateMachine
 				}
 			}
 		}
@@ -264,19 +265,19 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		for i, env := range v.ecosystem.environments {
 			if msg.name == env.name {
 				selectedEnv := &v.ecosystem.environments[i]
-				newVMs := make([]VM, 0)
-				for _, vmStatus := range msg.status {
-					newVM := VM{
-						provider: vmStatus.Fields["provider-name"],
-						state:    vmStatus.Fields["state"],
+				newMachines := make([]Machine, 0)
+				for _, machineStatus := range msg.status {
+					newMachine := Machine{
+						provider: machineStatus.Fields["provider-name"],
+						state:    machineStatus.Fields["state"],
 						home:     selectedEnv.home,
-						name:     vmStatus.Name,
+						name:     machineStatus.Name,
 						// Reset the selected command
 						selectedCommand: 0,
 					}
-					newVMs = append(newVMs, newVM)
+					newMachines = append(newMachines, newMachine)
 				}
-				selectedEnv.VMs = newVMs
+				selectedEnv.machines = newMachines
 				break
 			}
 		}
@@ -288,8 +289,8 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return v, v.createEnvStatusCmd(v.ecosystem.currentEnv())
 		} else {
 			// Getting a runMsg means something happened so run async task to get
-			// new status on the VM the command was just run on.
-			return v, v.createMachineStatusCmd(v.ecosystem.currentVM().machineID)
+			// new status on the machine the command was just run on.
+			return v, v.createMachineStatusCmd(v.ecosystem.currentMachine().machineID)
 		}
 
 	// TODO: Handle error messages (just throw them in the viewport)

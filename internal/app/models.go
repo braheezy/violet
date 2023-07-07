@@ -16,38 +16,38 @@ var supportedVagrantCommands = []string{"up", "halt", "ssh", "reload", "provisio
 type Environment struct {
 	// Friendly name for the Environment
 	name string
-	// Environments have 0 or more VMs
-	VMs []VM
-	// The currently selected command to run on the VM.
+	// Environments have 0 or more machines
+	machines []Machine
+	// The currently selected command to run on the machine.
 	selectedCommand int
 	home            string
 	hasFocus        bool
 }
 
-// VM contains all the data and actions associated with a specific VM
-type VM struct {
+// Machine contains all the data and actions associated with a specific Machine
+type Machine struct {
 	name      string
 	provider  string
 	state     string
 	home      string
 	machineID string
-	// The currently selected command to run on the VM.
+	// The currently selected command to run on the machine.
 	selectedCommand int
 }
 
-func (vm *VM) View() string {
-	displayName := vm.name
+func (m *Machine) View() string {
+	displayName := m.name
 	// If there's no name yet, at least show the machineID
 	if displayName == "" {
-		displayName = vm.machineID
+		displayName = m.machineID
 	}
 
-	// Join the VM info for the card view
+	// Join the machine info for the card view
 	content := lipgloss.JoinVertical(
 		lipgloss.Left,
 		cardTitleStyle.Render(displayName),
-		cardStatusStyle.Foreground(statusColors[vm.state]).Render(vm.state),
-		cardProviderStyle.Render(vm.provider),
+		cardStatusStyle.Foreground(statusColors[m.state]).Render(m.state),
+		cardProviderStyle.Render(m.provider),
 	)
 
 	return content
@@ -89,9 +89,9 @@ func newViolet() Violet {
 	}
 }
 
-// Simple helper to get the specific VM the user is interacting with
-func (e *Ecosystem) currentVM() *VM {
-	return &e.environments[e.selectedEnv].VMs[e.selectedVM]
+// Simple helper to get the specific machine the user is interacting with
+func (e *Ecosystem) currentMachine() *Machine {
+	return &e.environments[e.selectedEnv].machines[e.selectedMachine]
 }
 
 func (e *Ecosystem) currentEnv() *Environment {
@@ -99,21 +99,21 @@ func (e *Ecosystem) currentEnv() *Environment {
 }
 
 func (e *Ecosystem) View() (result string) {
-	// vmCards will be the set of VMs to show for the selected env.
+	// machineCards will be the set of machines to show for the selected env.
 	// They are dealt with first so we know the size of content we need to
 	// wrap in "tabs"
-	vmCards := []string{}
+	machineCards := []string{}
 	selectedEnv := e.environments[e.selectedEnv]
-	for i, vm := range selectedEnv.VMs {
-		// "Viewing" a VM will get it's specific info
-		vmInfo := vm.View()
+	for i, machine := range selectedEnv.machines {
+		// "Viewing" a machine will get it's specific info
+		machineView := machine.View()
 		// Commands are the same for everyone so they are grabbed from the main model
-		commands := e.commandButtons.View(vm.selectedCommand)
-		cardInfo := lipgloss.JoinHorizontal(lipgloss.Center, vmInfo, commands)
-		if !selectedEnv.hasFocus && i == e.selectedVM {
+		commands := e.commandButtons.View(machine.selectedCommand)
+		cardInfo := lipgloss.JoinHorizontal(lipgloss.Center, machineView, commands)
+		if !selectedEnv.hasFocus && i == e.selectedMachine {
 			cardInfo = selectedCardStyle.Render(cardInfo)
 		}
-		vmCards = append(vmCards, cardInfo)
+		machineCards = append(machineCards, cardInfo)
 
 		// This card always exists and controls the top-level environment
 		envTitle := envCardTitleStyle.Render(selectedEnv.name)
@@ -123,7 +123,7 @@ func (e *Ecosystem) View() (result string) {
 		}
 		envCard := lipgloss.JoinHorizontal(lipgloss.Center, envTitle, envCommands)
 
-		tabContent := envCard + "\n" + strings.Join(vmCards, "\n")
+		tabContent := envCard + "\n" + strings.Join(machineCards, "\n")
 
 		// Now create the tab headers, one for each environment.
 		var tabs []string

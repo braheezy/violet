@@ -16,8 +16,8 @@ type Ecosystem struct {
 	// Buttons to allow the user to run commands
 	commandButtons buttonGroup
 	// Indexes of the respective lists that are currently selected.
-	selectedEnv int
-	selectedVM  int
+	selectedEnv     int
+	selectedMachine int
 }
 
 // Updates for the entire ecosystem. Usually with results from `global-status`
@@ -36,28 +36,28 @@ func createEcosystem(client *vagrant.VagrantClient) (Ecosystem, error) {
 	if results == nil {
 		return nilEcosystem, nil
 	}
-	// Create the VM struct
-	var VMs []VM
+
+	var machines []Machine
 	for _, machineInfo := range results {
-		vm := VM{
+		machine := Machine{
 			machineID: machineInfo.MachineID,
 			provider:  machineInfo.Fields["provider-name"],
 			state:     strings.Replace(machineInfo.Fields["state"], "_", " ", -1),
 			home:      machineInfo.Fields["machine-home"],
 		}
-		VMs = append(VMs, vm)
+		machines = append(machines, machine)
 	}
-	// Create different envs by grouping VMs based on machine-home
-	envGroups := make(map[string][]VM)
-	for _, vm := range VMs {
+	// Create different envs by grouping machines based on machine-home
+	envGroups := make(map[string][]Machine)
+	for _, machine := range machines {
 		// TODO: Bug if two different paths have the same folder name e.g. /foo/env1 and /bar/env1 will incorrectly be treated the same
-		envGroups[path.Base(vm.home)] = append(envGroups[path.Base(vm.home)], vm)
+		envGroups[path.Base(machine.home)] = append(envGroups[path.Base(machine.home)], machine)
 	}
 	var environments []Environment
-	for envName, vms := range envGroups {
+	for envName, machines := range envGroups {
 		env := Environment{
 			name:     envName,
-			VMs:      vms,
+			machines: machines,
 			home:     envGroups[envName][0].home,
 			hasFocus: true,
 		}

@@ -115,7 +115,7 @@ func (c *VagrantClient) RunCommandInDirectory(command string, dir string) (outpu
 	return result, nil
 }
 
-// Represents the result of a Vagrant command under the context of a single VM.
+// Represents the result of a Vagrant command under the context of a single machine.
 type MachineInfo struct {
 	// Name is the name of the machine.
 	Name string
@@ -149,7 +149,7 @@ func ParseVagrantOutput(output string) []MachineInfo {
 
 			timestamp is a Unix timestamp in UTC of when the message was printed.
 
-			target is the target of the following output. This is empty if the message is related to Vagrant globally. Otherwise, this is generally a machine name so you can relate output to a specific machine when multi-VM is in use.
+			target is the target of the following output. This is empty if the message is related to Vagrant globally. Otherwise, this is generally a machine name so you can relate output to a specific machine when multi-machine is in use.
 
 			type is the type of machine-readable message being outputted. There are a set of standard types which are covered later.
 
@@ -185,20 +185,20 @@ func ParseVagrantOutput(output string) []MachineInfo {
 					}
 				}
 				// Now, fill in machine data, keeping an eye out for new Names or MachineIDs, the clear indication a new machine has been found.
-				// metadata lines de-lineate VMs and are a good place to grab the name.
+				// metadata lines de-lineate machines and are a good place to grab the name.
 				if field == "metadata" {
 					// Save name if it's the first we've seen
 					if result.Name == "" {
 						// NB: target might be "" too, that's okay.
 						result.Name = target
 					} else if result.Name != target {
-						// New VM found. Create new Result
+						// New machine found. Create new Result
 						results = append(results, result)
 						result = MachineInfo{Name: target, Fields: make(map[string]string)}
 					}
 				} else if field == "machine-id" {
 					if result.MachineID != "" {
-						// New VM found. Create new Result
+						// New machine found. Create new Result
 						results = append(results, result)
 						result = MachineInfo{Name: target, MachineID: m[2], Fields: make(map[string]string)}
 					} else {
