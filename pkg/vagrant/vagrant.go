@@ -17,6 +17,8 @@ type VagrantClient struct {
 	ExecPath string
 	// Environment variables used when running Vagrant commands
 	Env []string
+	// The working directory for Vagrant commands
+	WorkingDir string
 }
 
 // NewVagrantClient returns a new VagrantClient ready to run commands.
@@ -84,6 +86,7 @@ func (c *VagrantClient) GetStatusForID(machineID string) (result string, err err
 func (c *VagrantClient) RunCommand(command string, outputCh chan string) {
 	cmd := exec.Command(c.ExecPath, strings.Split(command, " ")...)
 	cmd.Env = c.Env
+	cmd.Dir = c.WorkingDir
 
 	defer close(outputCh)
 

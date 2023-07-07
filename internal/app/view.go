@@ -28,11 +28,7 @@ func (v Violet) View() (view string) {
 	view += "\n\n"
 
 	// Show the current environments
-	envTitle := lipgloss.NewStyle().
-		Foreground(primaryColor).
-		Padding(0, 1).
-		Render("Environments:")
-	envArea := "\n\n"
+	envArea := ""
 	if v.ecosystem.environments == nil {
 		envArea += "No environments found :("
 	} else {
@@ -40,19 +36,34 @@ func (v Violet) View() (view string) {
 		// They are dealt with first so we know the size of content we need to
 		// wrap in "tabs"
 		vmCards := []string{}
-		for i, vm := range v.ecosystem.environments[v.selectedEnv].VMs {
+		selectedEnv := v.currentEnv()
+		for i, vm := range selectedEnv.VMs {
 			// "Viewing" a VM will get it's specific info
 			vmInfo := vm.View()
 			// Commands are the same for everyone so they are grabbed from the main model
 			commands := v.layout.commandButtons.View(vm.selectedCommand)
 			cardInfo := lipgloss.JoinHorizontal(lipgloss.Center, vmInfo, commands)
-			if i == v.selectedVM {
+			if !selectedEnv.hasFocus && i == v.selectedVM {
 				cardInfo = selectedCardStyle.Render(cardInfo)
 			}
 			vmCards = append(vmCards, cardInfo)
 		}
 
-		tabContent := strings.Join(vmCards, "\n")
+		// This card always exists and controls the top-level environment
+		envTitle := lipgloss.NewStyle().
+			Bold(true).
+			Foreground(primaryColor).
+			Render(selectedEnv.name)
+		envCommands := v.layout.commandButtons.View(selectedEnv.selectedCommand)
+		if selectedEnv.hasFocus {
+			envTitle = lipgloss.NewStyle().
+				Bold(true).
+				Foreground(accentColor).
+				Render(selectedEnv.name)
+		}
+		envCard := lipgloss.JoinHorizontal(lipgloss.Center, envTitle, envCommands)
+
+		tabContent := envCard + "\n" + strings.Join(vmCards, "\n")
 
 		var tabs []string
 		for i, env := range v.ecosystem.environments {
@@ -85,16 +96,21 @@ func (v Violet) View() (view string) {
 		envArea += lipgloss.JoinVertical(lipgloss.Left, tabHeader, tabWindowStyle.Render(tabContent))
 		envArea = lipgloss.NewStyle().Padding(0, 2).Render(envArea)
 	}
-	view += envTitle + envArea
+	view += envArea
 	view += "\n\n"
 
 	if v.layout.spinner.show {
-		currentVM := v.getCurrentVM()
-		command := spinnerCommandStyle.Render(supportedVagrantCommands[currentVM.selectedCommand])
+		commandIndex := v.currentVM().selectedCommand
+		targetName := v.currentVM().name
+		if v.currentEnv().hasFocus {
+			commandIndex = v.currentEnv().selectedCommand
+			targetName = v.currentEnv().name
+		}
+		command := spinnerCommandStyle.Render(supportedVagrantCommands[commandIndex])
 
 		title := spinnerStyle.Render(fmt.Sprintf(
 			"%v: %v command %v",
-			currentVM.name,
+			targetName,
 			v.layout.spinner.verb,
 			command,
 		))

@@ -24,6 +24,10 @@ type Environment struct {
 	name string
 	// Environments have 0 or more VMs
 	VMs []VM
+	// The currently selected command to run on the VM.
+	selectedCommand int
+	home            string
+	hasFocus        bool
 }
 
 // VM contains all the data and actions associated with a specific VM
@@ -100,6 +104,16 @@ func newViolet() Violet {
 }
 
 // Simple helper to get the specific VM the user is interacting with
-func (v *Violet) getCurrentVM() *VM {
+func (v *Violet) currentVM() *VM {
 	return &v.ecosystem.environments[v.selectedEnv].VMs[v.selectedVM]
+}
+
+func (v *Violet) currentEnv() *Environment {
+	return &v.ecosystem.environments[v.selectedEnv]
+}
+
+func (v *Violet) RunCommandInProject(command string, dir string, outputCh chan string) {
+	v.ecosystem.client.WorkingDir = dir
+	v.ecosystem.client.RunCommand(command, outputCh)
+	v.ecosystem.client.WorkingDir = ""
 }

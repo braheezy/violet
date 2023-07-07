@@ -53,6 +53,7 @@ func createEcosystem(client *vagrant.VagrantClient) (Ecosystem, error) {
 		env := Environment{
 			name: envName,
 			VMs:  vms,
+			home: envGroups[envName][0].home,
 		}
 		environments = append(environments, env)
 	}
