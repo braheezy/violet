@@ -8,35 +8,43 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-func (v *Violet) RunCommandInProject(command string, dir string) (output string, err error) {
-	v.ecosystem.client.WorkingDir = dir
-	output, _ = v.ecosystem.client.RunCommand(command)
-	v.ecosystem.client.WorkingDir = ""
-	return output, nil
-}
-
+// runMsg is emitted after a command is run.
 type runMsg struct {
 	content string
 	err     error
 }
+type runErrMsg struct{ err error }
 
-func (v *Violet) getRunCommandOnVM(command string, identifier string) tea.Cmd {
+func (e runErrMsg) Error() string { return e.err.Error() }
+
+// Create the tea.Cmd that will run command on the machine specified by identifier.
+func (v *Violet) createMachineRunCmd(command string, identifier string) tea.Cmd {
 	return func() tea.Msg {
-		content, _ := v.ecosystem.client.RunCommand(fmt.Sprintf("%v %v", command, identifier))
+		content, err := v.ecosystem.client.RunCommand(fmt.Sprintf("%v %v", command, identifier))
+
+		if err != nil {
+			return runErrMsg{err}
+		}
+
 		return runMsg{content: content}
 	}
 }
 
-func (v *Violet) getRunCommandInVagrantProject(command string, dir string) tea.Cmd {
+// Create the tea.Cmd that will run command in the directory.
+func (v *Violet) createEnvRunCmd(command string, dir string) tea.Cmd {
 	return func() tea.Msg {
-		content, _ := v.RunCommandInProject(command, dir)
+		content, err := v.ecosystem.client.RunCommandInDirectory(command, dir)
+
+		if err != nil {
+			return runErrMsg{err}
+		}
 
 		return runMsg{content: content}
 	}
 }
 
-// Status messages get emitted on a per-VM basis
-type statusMsg struct {
+// machineStatusMsg is emitted when status on a machine is received.
+type machineStatusMsg struct {
 	// identifier is the name or machine-id for this status info
 	identifier string
 	// Resultant status about machine
@@ -47,7 +55,8 @@ type statusErrMsg struct{ err error }
 
 func (e statusErrMsg) Error() string { return e.err.Error() }
 
-func (v *Violet) getVMStatus(identifier string) tea.Cmd {
+// Create the tea.Cmd that will get status on a machine.
+func (v *Violet) createMachineStatusCmd(identifier string) tea.Cmd {
 	return func() tea.Msg {
 		result, err := v.ecosystem.client.GetStatusForID(identifier)
 
@@ -58,21 +67,23 @@ func (v *Violet) getVMStatus(identifier string) tea.Cmd {
 		vmStatus := vagrant.ParseVagrantOutput(result)[0]
 		vmStatus.Fields["state"] = strings.Replace(vmStatus.Fields["state"], "_", " ", -1)
 
-		return statusMsg{
+		return machineStatusMsg{
 			identifier: identifier,
 			status:     vmStatus,
 		}
 	}
 }
 
+// envStatusMsg is emitted when status on an environment is received.
 type envStatusMsg struct {
 	name   string
 	status []vagrant.MachineInfo
 }
 
-func (v *Violet) getEnvStatus(env *Environment) tea.Cmd {
+// Create the tea.Cmd that will get status on an environment.
+func (v *Violet) createEnvStatusCmd(env *Environment) tea.Cmd {
 	return func() tea.Msg {
-		result, _ := v.RunCommandInProject("status --machine-readable", env.home)
+		result, _ := v.ecosystem.client.RunCommandInDirectory("status --machine-readable", env.home)
 
 		newStatus := vagrant.ParseVagrantOutput(result)
 		return envStatusMsg{

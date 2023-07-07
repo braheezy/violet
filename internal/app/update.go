@@ -165,7 +165,7 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, v.keys.Execute):
 			if v.currentEnv().hasFocus {
 				vagrantCommand := supportedVagrantCommands[v.currentEnv().selectedCommand]
-				runCommand := v.getRunCommandInVagrantProject(vagrantCommand, v.currentEnv().home)
+				runCommand := v.createEnvRunCmd(vagrantCommand, v.currentEnv().home)
 				v.layout.spinner.show = true
 				// This must be sent for the spinner to spin
 				tickCmd := v.layout.spinner.spinner.Tick
@@ -194,7 +194,7 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return v, runCommand
 				} else {
 					// Run the command async and stream result back
-					runCommand := v.getRunCommandOnVM(
+					runCommand := v.createMachineRunCmd(
 						vagrantCommand,
 						currentVM.machineID,
 					)
@@ -218,7 +218,7 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Queue up a bunch of async calls to go get those names.
 		for _, env := range eco.environments {
 			for _, vm := range env.VMs {
-				statusCmds = append(statusCmds, v.getVMStatus(vm.machineID))
+				statusCmds = append(statusCmds, v.createMachineStatusCmd(vm.machineID))
 			}
 		}
 		// Set the new ecosystem
@@ -227,7 +227,7 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return v, tea.Batch(statusCmds...)
 
 	// New data about a specific VM has come in
-	case statusMsg:
+	case machineStatusMsg:
 		v.layout.spinner.show = false
 		v.layout.spinner.verb = verbs[rand.Intn(len(verbs))]
 		v.layout.spinner.spinner.Spinner = spinners[rand.Intn(len(spinners))]
@@ -281,11 +281,11 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// Result from a command has been streamed in
 	case runMsg:
 		if v.currentEnv().hasFocus {
-			return v, v.getEnvStatus(v.currentEnv())
+			return v, v.createEnvStatusCmd(v.currentEnv())
 		} else {
 			// Getting a runMsg means something happened so run async task to get
 			// new status on the VM the command was just run on.
-			return v, v.getVMStatus(v.currentVM().machineID)
+			return v, v.createMachineStatusCmd(v.currentVM().machineID)
 		}
 
 	// TODO: Handle error messages (just throw them in the viewport)
