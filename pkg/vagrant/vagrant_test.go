@@ -87,6 +87,32 @@ func TestGetStatusForID(t *testing.T) {
 		}
 	}
 }
+
+func TestRunCommandInDirectory(t *testing.T) {
+	client, _ := NewVagrantClient()
+	tests := []struct {
+		name      string
+		input     map[string]string
+		expected  string
+		wantError bool
+	}{
+		{
+			name:      "Non-existent vagrant project",
+			input:     map[string]string{"command": "status", "directory": "/tmp"},
+			expected:  "",
+			wantError: true,
+		},
+	}
+	for _, test := range tests {
+		result, err := client.RunCommandInDirectory(test.input["command"], test.input["directory"])
+		require.Contains(t, result, test.expected)
+		require.Empty(t, client.workingDir)
+		if test.wantError {
+			require.Error(t, err)
+		}
+	}
+
+}
 func TestParseVagrantOutput_StatusSingleEnv(t *testing.T) {
 	tests := []struct {
 		name     string

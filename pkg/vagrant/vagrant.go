@@ -18,7 +18,7 @@ type VagrantClient struct {
 	// Environment variables used when running Vagrant commands
 	Env []string
 	// The working directory for Vagrant commands
-	WorkingDir string
+	workingDir string
 }
 
 // NewVagrantClient returns a new VagrantClient ready to run commands.
@@ -72,11 +72,11 @@ func (c *VagrantClient) GetStatusForID(machineID string) (result string, err err
 	return result, nil
 }
 
-// Run a Vagrant command and stream the result back to caller over outputCh
+// Run a Vagrant command and return the result as a string with newlines.
 func (c *VagrantClient) RunCommand(command string) (output string, err error) {
 	cmd := exec.Command(c.ExecPath, strings.Split(command, " ")...)
 	cmd.Env = c.Env
-	cmd.Dir = c.WorkingDir
+	cmd.Dir = c.workingDir
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -99,9 +99,20 @@ func (c *VagrantClient) RunCommand(command string) (output string, err error) {
 
 	err = cmd.Wait()
 	if err != nil {
-		return "", errors.New("Error waiting for the command to complete:" + err.Error())
+		return "", errors.New("Error waiting for the command to complete: " + err.Error())
 	}
 	return output, nil
+}
+
+func (c *VagrantClient) RunCommandInDirectory(command string, dir string) (output string, err error) {
+	c.workingDir = dir
+	result, err := c.RunCommand(command)
+	c.workingDir = ""
+
+	if err != nil {
+		return "", err
+	}
+	return result, nil
 }
 
 // Represents the result of a Vagrant command under the context of a single VM.
