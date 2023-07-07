@@ -15,6 +15,9 @@ type Ecosystem struct {
 	client *vagrant.VagrantClient
 	// Buttons to allow the user to run commands
 	commandButtons buttonGroup
+	// Indexes of the respective lists that are currently selected.
+	selectedEnv int
+	selectedVM  int
 }
 
 // Updates for the entire ecosystem. Usually with results from `global-status`

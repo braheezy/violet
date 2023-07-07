@@ -30,17 +30,17 @@ func (v Violet) View() (view string) {
 	if v.ecosystem.environments == nil {
 		envArea += "No environments found :("
 	} else {
-		envArea += v.ecosystem.View(v.selectedEnv, v.selectedVM)
+		envArea += v.ecosystem.View()
 	}
 	view += envArea
 	view += "\n\n"
 
 	if v.spinner.show {
-		commandIndex := v.currentVM().selectedCommand
-		targetName := v.currentVM().name
-		if v.currentEnv().hasFocus {
-			commandIndex = v.currentEnv().selectedCommand
-			targetName = v.currentEnv().name
+		commandIndex := v.ecosystem.currentVM().selectedCommand
+		targetName := v.ecosystem.currentVM().name
+		if v.ecosystem.currentEnv().hasFocus {
+			commandIndex = v.ecosystem.currentEnv().selectedCommand
+			targetName = v.ecosystem.currentEnv().name
 		}
 		command := spinnerCommandStyle.Render(supportedVagrantCommands[commandIndex])
 

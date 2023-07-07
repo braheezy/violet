@@ -63,9 +63,6 @@ type Violet struct {
 	keys helpKeyMap
 	// Spinner to show while commands are running
 	spinner currentSpinner
-	// Indexes of the respective lists that are currently selected.
-	selectedEnv int
-	selectedVM  int
 	// Current terminal size
 	terminalWidth  int
 	terminalHeight int
@@ -86,36 +83,34 @@ func newViolet() Violet {
 			environments: nil,
 			client:       client,
 		},
-		keys:        keys,
-		help:        help,
-		selectedEnv: 0,
-		selectedVM:  0,
-		spinner:     newSpinner(),
+		keys:    keys,
+		help:    help,
+		spinner: newSpinner(),
 	}
 }
 
 // Simple helper to get the specific VM the user is interacting with
-func (v *Violet) currentVM() *VM {
-	return &v.ecosystem.environments[v.selectedEnv].VMs[v.selectedVM]
+func (e *Ecosystem) currentVM() *VM {
+	return &e.environments[e.selectedEnv].VMs[e.selectedVM]
 }
 
-func (v *Violet) currentEnv() *Environment {
-	return &v.ecosystem.environments[v.selectedEnv]
+func (e *Ecosystem) currentEnv() *Environment {
+	return &e.environments[e.selectedEnv]
 }
 
-func (e *Ecosystem) View(selectedEnvIndex int, selectedMachineIndex int) (result string) {
+func (e *Ecosystem) View() (result string) {
 	// vmCards will be the set of VMs to show for the selected env.
 	// They are dealt with first so we know the size of content we need to
 	// wrap in "tabs"
 	vmCards := []string{}
-	selectedEnv := e.environments[selectedEnvIndex]
+	selectedEnv := e.environments[e.selectedEnv]
 	for i, vm := range selectedEnv.VMs {
 		// "Viewing" a VM will get it's specific info
 		vmInfo := vm.View()
 		// Commands are the same for everyone so they are grabbed from the main model
 		commands := e.commandButtons.View(vm.selectedCommand)
 		cardInfo := lipgloss.JoinHorizontal(lipgloss.Center, vmInfo, commands)
-		if !selectedEnv.hasFocus && i == selectedMachineIndex {
+		if !selectedEnv.hasFocus && i == e.selectedVM {
 			cardInfo = selectedCardStyle.Render(cardInfo)
 		}
 		vmCards = append(vmCards, cardInfo)
@@ -135,7 +130,7 @@ func (e *Ecosystem) View(selectedEnvIndex int, selectedMachineIndex int) (result
 		for i, env := range e.environments {
 			// Figure out which "tab" is selected and stylize accordingly
 			var style lipgloss.Style
-			isFirst, _, isActive := i == 0, i == len(e.environments)-1, i == selectedEnvIndex
+			isFirst, _, isActive := i == 0, i == len(e.environments)-1, i == e.selectedEnv
 			if isActive {
 				style = activeTabStyle.Copy()
 			} else {

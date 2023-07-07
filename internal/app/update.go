@@ -100,78 +100,82 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, v.keys.Left):
-			if v.currentEnv().hasFocus {
-				if v.currentEnv().selectedCommand == 0 {
-					v.currentEnv().selectedCommand = len(supportedVagrantCommands) - 1
+			currentEnv := v.ecosystem.currentEnv()
+			currentMachine := v.ecosystem.currentVM()
+			if currentEnv.hasFocus {
+				if currentEnv.selectedCommand == 0 {
+					currentEnv.selectedCommand = len(supportedVagrantCommands) - 1
 				} else {
-					v.currentEnv().selectedCommand--
+					currentEnv.selectedCommand--
 				}
 			} else {
-				if v.currentVM().selectedCommand == 0 {
-					v.currentVM().selectedCommand = len(supportedVagrantCommands) - 1
+				if currentMachine.selectedCommand == 0 {
+					currentMachine.selectedCommand = len(supportedVagrantCommands) - 1
 				} else {
-					v.currentVM().selectedCommand--
+					currentMachine.selectedCommand--
 				}
 			}
 		case key.Matches(msg, v.keys.Right):
-			if v.currentEnv().hasFocus {
-				if v.currentEnv().selectedCommand == len(supportedVagrantCommands)-1 {
-					v.currentEnv().selectedCommand = 0
+			currentEnv := v.ecosystem.currentEnv()
+			currentMachine := v.ecosystem.currentVM()
+			if currentEnv.hasFocus {
+				if currentEnv.selectedCommand == len(supportedVagrantCommands)-1 {
+					currentEnv.selectedCommand = 0
 				} else {
-					v.currentEnv().selectedCommand++
+					currentEnv.selectedCommand++
 				}
 			} else {
-				if v.currentVM().selectedCommand == len(supportedVagrantCommands)-1 {
-					v.currentVM().selectedCommand = 0
+				if currentMachine.selectedCommand == len(supportedVagrantCommands)-1 {
+					currentMachine.selectedCommand = 0
 				} else {
-					v.currentVM().selectedCommand++
+					currentMachine.selectedCommand++
 				}
 			}
 		case key.Matches(msg, v.keys.Up):
-			if v.currentEnv().hasFocus {
+			if v.ecosystem.currentEnv().hasFocus {
 				break
 			}
-			if v.selectedVM == 0 {
-				v.selectedVM = len(v.currentEnv().VMs) - 1
+			if v.ecosystem.selectedVM == 0 {
+				v.ecosystem.selectedVM = len(v.ecosystem.currentEnv().VMs) - 1
 			} else {
-				v.selectedVM -= 1
+				v.ecosystem.selectedVM -= 1
 			}
 		case key.Matches(msg, v.keys.Down):
-			if v.currentEnv().hasFocus {
+			if v.ecosystem.currentEnv().hasFocus {
 				break
 			}
-			if v.selectedVM == len(v.currentEnv().VMs)-1 {
-				v.selectedVM = 0
+			if v.ecosystem.selectedVM == len(v.ecosystem.currentEnv().VMs)-1 {
+				v.ecosystem.selectedVM = 0
 			} else {
-				v.selectedVM += 1
+				v.ecosystem.selectedVM += 1
 			}
 		case key.Matches(msg, v.keys.Switch):
-			if v.selectedEnv == len(v.ecosystem.environments)-1 {
-				v.selectedEnv = 0
+			if v.ecosystem.selectedEnv == len(v.ecosystem.environments)-1 {
+				v.ecosystem.selectedEnv = 0
 			} else {
-				v.selectedEnv += 1
+				v.ecosystem.selectedEnv += 1
 			}
 			return v, nil
 		case key.Matches(msg, v.keys.ShiftTab):
-			if v.selectedEnv == 0 {
-				v.selectedEnv = len(v.ecosystem.environments) - 1
+			if v.ecosystem.selectedEnv == 0 {
+				v.ecosystem.selectedEnv = len(v.ecosystem.environments) - 1
 			} else {
-				v.selectedEnv -= 1
+				v.ecosystem.selectedEnv -= 1
 			}
 			return v, nil
 		case key.Matches(msg, v.keys.Space):
-			v.currentEnv().hasFocus = !v.currentEnv().hasFocus
+			v.ecosystem.currentEnv().hasFocus = !v.ecosystem.currentEnv().hasFocus
 			return v, nil
 		case key.Matches(msg, v.keys.Execute):
-			if v.currentEnv().hasFocus {
-				vagrantCommand := supportedVagrantCommands[v.currentEnv().selectedCommand]
-				runCommand := v.createEnvRunCmd(vagrantCommand, v.currentEnv().home)
+			if v.ecosystem.currentEnv().hasFocus {
+				vagrantCommand := supportedVagrantCommands[v.ecosystem.currentEnv().selectedCommand]
+				runCommand := v.createEnvRunCmd(vagrantCommand, v.ecosystem.currentEnv().home)
 				v.spinner.show = true
 				// This must be sent for the spinner to spin
 				tickCmd := v.spinner.spinner.Tick
 				return v, tea.Batch(runCommand, tickCmd)
 			} else {
-				currentVM := v.currentVM()
+				currentVM := v.ecosystem.currentVM()
 				vagrantCommand := supportedVagrantCommands[currentVM.selectedCommand]
 				/*
 					TODO: This doesn't support running commands in a desktop-less environment that doesn't have an external terminal to put commands on. One approach is to use `screen` to create virtual screen.
@@ -280,12 +284,12 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	// Result from a command has been streamed in
 	case runMsg:
-		if v.currentEnv().hasFocus {
-			return v, v.createEnvStatusCmd(v.currentEnv())
+		if v.ecosystem.currentEnv().hasFocus {
+			return v, v.createEnvStatusCmd(v.ecosystem.currentEnv())
 		} else {
 			// Getting a runMsg means something happened so run async task to get
 			// new status on the VM the command was just run on.
-			return v, v.createMachineStatusCmd(v.currentVM().machineID)
+			return v, v.createMachineStatusCmd(v.ecosystem.currentVM().machineID)
 		}
 
 	// TODO: Handle error messages (just throw them in the viewport)
