@@ -35,7 +35,7 @@ func createEcosystem(client *vagrant.VagrantClient) (Ecosystem, error) {
 	var VMs []VM
 	for _, machineInfo := range results {
 		vm := VM{
-			machineID: machineInfo.Fields["machine-id"],
+			machineID: machineInfo.MachineID,
 			provider:  machineInfo.Fields["provider-name"],
 			state:     strings.Replace(machineInfo.Fields["state"], "_", " ", -1),
 			home:      machineInfo.Fields["machine-home"],
