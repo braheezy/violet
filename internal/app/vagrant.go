@@ -9,7 +9,8 @@ import (
 )
 
 // Order matters here.
-var supportedVagrantCommands = []string{"up", "halt", "ssh", "reload", "provision"}
+var supportedMachineCommands = []string{"up", "halt", "ssh", "reload", "provision"}
+var supportedEnvCommands = []string{"up", "halt", "reload", "provision"}
 
 // runMsg is emitted after a command is run.
 type runMsg struct {

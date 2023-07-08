@@ -72,7 +72,7 @@ func createEcosystem(client *vagrant.VagrantClient) (Ecosystem, error) {
 	return Ecosystem{
 		environments:   environments,
 		client:         client,
-		commandButtons: newCommandButtons(),
+		commandButtons: newCommandButtons(supportedMachineCommands),
 	}, nil
 }
 
@@ -110,11 +110,12 @@ func (e *Ecosystem) View() (result string) {
 
 		// This card always exists and controls the top-level environment
 		envTitle := envCardTitleStyle.Render(selectedEnv.name)
-		envCommands := e.commandButtons.View(selectedEnv.selectedCommand)
+		envCommands := newCommandButtons(supportedEnvCommands)
+		// envCommands = e.commandButtons.View(selectedEnv.selectedCommand)
 		if selectedEnv.hasFocus {
 			envTitle = selectedEnvCardStyle.Render(selectedEnv.name)
 		}
-		envCard := lipgloss.JoinHorizontal(lipgloss.Center, envTitle, envCommands)
+		envCard := lipgloss.JoinHorizontal(lipgloss.Center, envTitle, envCommands.View(selectedEnv.selectedCommand))
 
 		tabContent := envCard + "\n" + strings.Join(machineCards, "\n")
 

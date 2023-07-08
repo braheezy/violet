@@ -119,13 +119,13 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			currentMachine := v.ecosystem.currentMachine()
 			if currentEnv.hasFocus {
 				if currentEnv.selectedCommand == 0 {
-					currentEnv.selectedCommand = len(supportedVagrantCommands) - 1
+					currentEnv.selectedCommand = len(supportedEnvCommands) - 1
 				} else {
 					currentEnv.selectedCommand--
 				}
 			} else {
 				if currentMachine.selectedCommand == 0 {
-					currentMachine.selectedCommand = len(supportedVagrantCommands) - 1
+					currentMachine.selectedCommand = len(supportedMachineCommands) - 1
 				} else {
 					currentMachine.selectedCommand--
 				}
@@ -134,13 +134,13 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			currentEnv := v.ecosystem.currentEnv()
 			currentMachine := v.ecosystem.currentMachine()
 			if currentEnv.hasFocus {
-				if currentEnv.selectedCommand == len(supportedVagrantCommands)-1 {
+				if currentEnv.selectedCommand == len(supportedEnvCommands)-1 {
 					currentEnv.selectedCommand = 0
 				} else {
 					currentEnv.selectedCommand++
 				}
 			} else {
-				if currentMachine.selectedCommand == len(supportedVagrantCommands)-1 {
+				if currentMachine.selectedCommand == len(supportedMachineCommands)-1 {
 					currentMachine.selectedCommand = 0
 				} else {
 					currentMachine.selectedCommand++
@@ -185,7 +185,7 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return v, nil
 		case key.Matches(msg, v.keys.Execute):
 			if v.ecosystem.currentEnv().hasFocus {
-				vagrantCommand := supportedVagrantCommands[v.ecosystem.currentEnv().selectedCommand]
+				vagrantCommand := supportedMachineCommands[v.ecosystem.currentEnv().selectedCommand]
 				runCommand := v.createEnvRunCmd(vagrantCommand, v.ecosystem.currentEnv().home)
 				v.spinner.show = true
 				// This must be sent for the spinner to spin
@@ -193,7 +193,7 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return v, tea.Batch(runCommand, tickCmd)
 			} else {
 				currentMachine := v.ecosystem.currentMachine()
-				vagrantCommand := supportedVagrantCommands[currentMachine.selectedCommand]
+				vagrantCommand := supportedMachineCommands[currentMachine.selectedCommand]
 				/*
 					TODO: This doesn't support running commands in a desktop-less environment that doesn't have an external terminal to put commands on. One approach is to use `screen` to create virtual screen.
 

@@ -42,7 +42,7 @@ func (v Violet) View() (view string) {
 			commandIndex = v.ecosystem.currentEnv().selectedCommand
 			targetName = v.ecosystem.currentEnv().name
 		}
-		command := spinnerCommandStyle.Render(supportedVagrantCommands[commandIndex])
+		command := spinnerCommandStyle.Render(supportedMachineCommands[commandIndex])
 
 		title := spinnerStyle.Render(fmt.Sprintf(
 			"%v: %v command %v",

@@ -31,7 +31,7 @@ type buttonGroup struct {
 	width   int
 }
 
-func newCommandButtons() buttonGroup {
+func newCommandButtons(supportedVagrantCommands []string) buttonGroup {
 	var buttons []button
 	var longestCommand int
 	// Create buttons based on supported commands
@@ -63,8 +63,16 @@ func (bg *buttonGroup) View(selectedCommand int) string {
 	}
 
 	// TODO: Hacky to hardcode the row items. Is there a better way?
-	topRow := lipgloss.JoinHorizontal(lipgloss.Center, bg.buttons[0].View(), bg.buttons[1].View(), bg.buttons[2].View())
-	bottomRow := lipgloss.JoinHorizontal(lipgloss.Center, bg.buttons[3].View(), bg.buttons[4].View())
+	var topButtons []string
+	for i := 0; i < 3; i++ {
+		topButtons = append(topButtons, bg.buttons[i].View())
+	}
+	var bottomButtons []string
+	for i := 3; i < len(bg.buttons); i++ {
+		bottomButtons = append(bottomButtons, bg.buttons[i].View())
+	}
+	topRow := lipgloss.JoinHorizontal(lipgloss.Center, topButtons...)
+	bottomRow := lipgloss.JoinHorizontal(lipgloss.Center, bottomButtons...)
 
 	grid := lipgloss.JoinVertical(lipgloss.Center, topRow, bottomRow)
 
