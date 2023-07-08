@@ -15,7 +15,8 @@ type Ecosystem struct {
 	// Reference to a Vagrant client to run commands with
 	client *vagrant.VagrantClient
 	// Buttons to allow the user to run commands
-	commandButtons buttonGroup
+	machineCommands machineCommandButtons
+	envCommands     envCommandButtons
 	// Indexes of the respective lists that are currently selected.
 	selectedEnv     int
 	selectedMachine int
@@ -70,9 +71,10 @@ func createEcosystem(client *vagrant.VagrantClient) (Ecosystem, error) {
 		environments = append(environments, env)
 	}
 	return Ecosystem{
-		environments:   environments,
-		client:         client,
-		commandButtons: newCommandButtons(supportedMachineCommands),
+		environments:    environments,
+		client:          client,
+		machineCommands: newMachineCommandButtons(supportedMachineCommands),
+		envCommands:     newEnvCommandButtons(supportedEnvCommands),
 	}, nil
 }
 
@@ -98,8 +100,7 @@ func (e *Ecosystem) View() (result string) {
 	for i, machine := range selectedEnv.machines {
 		// "Viewing" a machine will get it's specific info
 		machineView := machine.View()
-		// Commands are the same for everyone so they are grabbed from the main model
-		commands := e.commandButtons.View(machine.selectedCommand)
+		commands := e.machineCommands.View(machine.selectedCommand)
 		cardInfo := lipgloss.JoinHorizontal(lipgloss.Top, machineView, commands)
 		if !selectedEnv.hasFocus && i == e.selectedMachine {
 			cardInfo = selectedCardStyle.Render(cardInfo)
@@ -110,7 +111,7 @@ func (e *Ecosystem) View() (result string) {
 
 		// This card always exists and controls the top-level environment
 		envTitle := envCardTitleStyle.Render(selectedEnv.name)
-		envCommands := newCommandButtons(supportedEnvCommands)
+		envCommands := newEnvCommandButtons(supportedEnvCommands)
 		// envCommands = e.commandButtons.View(selectedEnv.selectedCommand)
 		if selectedEnv.hasFocus {
 			envTitle = selectedEnvCardStyle.Render(selectedEnv.name)

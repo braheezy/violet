@@ -11,6 +11,13 @@ import (
 // Order matters here.
 var supportedMachineCommands = []string{"up", "halt", "ssh", "reload", "provision"}
 var supportedEnvCommands = []string{"up", "halt", "reload", "provision"}
+var symbols = map[string]string{
+	"up":        "▶",
+	"halt":      "■",
+	"ssh":       "＞＿ssh",
+	"reload":    "↺",
+	"provision": "🛠",
+}
 
 // runMsg is emitted after a command is run.
 type runMsg struct {

@@ -5,16 +5,27 @@ import (
 )
 
 var (
-	defaultButtonStyle = lipgloss.NewStyle().
+	defaultLargeButtonStyle = lipgloss.NewStyle().
 				Foreground(primaryColor).
 				Background(theme.Bg()).
 				Padding(1)
-	activeButtonStyle = defaultButtonStyle.Copy().
+	activeLargeButtonStyle = defaultLargeButtonStyle.Copy().
 				Foreground(textColor).
 				Background(primaryColor).
 				Bold(true)
-	buttonGroupStyle = lipgloss.NewStyle().
-				Margin(marginVertical, 0, marginVertical, marginHorizontal*2)
+	buttonLargeGroupStyle = lipgloss.NewStyle().
+				Margin(marginVertical, marginHorizontal, marginVertical, marginHorizontal*2)
+
+	defaultSmallButtonStyle = lipgloss.NewStyle().
+				Foreground(primaryColor).
+				Margin(0, 1)
+	activeSmallButtonStyle = defaultSmallButtonStyle.Copy().
+				Foreground(textColor).
+				Bold(true)
+	buttonSmallGroupStyle = lipgloss.NewStyle().
+				Margin(marginVertical, marginHorizontal).
+				Border(lipgloss.NormalBorder(), true).
+				BorderForeground(primaryColor)
 )
 
 type button struct {
@@ -31,52 +42,85 @@ type buttonGroup struct {
 	width   int
 }
 
-func newCommandButtons(supportedVagrantCommands []string) buttonGroup {
+type machineCommandButtons buttonGroup
+
+func newMachineCommandButtons(supportedVagrantCommands []string) machineCommandButtons {
 	var buttons []button
-	var longestCommand int
-	// Create buttons based on supported commands
+
 	for _, command := range supportedVagrantCommands {
-		longestCommand = max(longestCommand, len(command))
 		buttons = append(buttons, button{
-			content: command,
-			style:   defaultButtonStyle,
+			content: symbols[command],
+			style:   defaultSmallButtonStyle,
 		})
 	}
-	// Set the button width based on longest command
-	defaultButtonStyle.Width(longestCommand + defaultButtonStyle.GetHorizontalFrameSize())
-	activeButtonStyle.Width(longestCommand + activeButtonStyle.GetHorizontalFrameSize())
 
-	return buttonGroup{
+	return machineCommandButtons{
 		buttons: buttons,
-		// This provides excellent space for each command
-		width: longestCommand * 3,
 	}
 }
 
-func (bg *buttonGroup) View(selectedCommand int) string {
+func (bg *machineCommandButtons) View(selectedCommand int) string {
 	for i := range bg.buttons {
 		if i == selectedCommand {
-			bg.buttons[i].style = activeButtonStyle
+			bg.buttons[i].style = activeSmallButtonStyle.Copy().Padding(0)
 		} else {
-			bg.buttons[i].style = defaultButtonStyle
+			bg.buttons[i].style = defaultSmallButtonStyle.Copy().Padding(0)
 		}
 	}
 
 	// TODO: Hacky to hardcode the row items. Is there a better way?
-	var topButtons []string
-	for i := 0; i < 3; i++ {
-		topButtons = append(topButtons, bg.buttons[i].View())
+	var row []string
+	for _, button := range bg.buttons {
+		row = append(row, button.View())
 	}
-	var bottomButtons []string
-	for i := 3; i < len(bg.buttons); i++ {
-		bottomButtons = append(bottomButtons, bg.buttons[i].View())
+
+	grid := lipgloss.JoinHorizontal(lipgloss.Center, row...)
+
+	return buttonSmallGroupStyle.Render(grid)
+}
+
+type envCommandButtons buttonGroup
+
+func newEnvCommandButtons(supportedVagrantCommands []string) envCommandButtons {
+	var buttons []button
+	var longestContent int
+	// Create buttons based on supported commands
+	for _, command := range supportedVagrantCommands {
+		cont := symbols[command] + " " + command
+		longestContent = max(longestContent, len(cont))
+		buttons = append(buttons, button{
+			content: cont,
+			style:   defaultLargeButtonStyle,
+		})
 	}
-	topRow := lipgloss.JoinHorizontal(lipgloss.Center, topButtons...)
-	bottomRow := lipgloss.JoinHorizontal(lipgloss.Center, bottomButtons...)
+	// Set the button width based on longest command
+	defaultLargeButtonStyle.Width(longestContent)
+	activeLargeButtonStyle.Width(longestContent)
 
-	grid := lipgloss.JoinVertical(lipgloss.Center, topRow, bottomRow)
+	return envCommandButtons{
+		buttons: buttons,
+		// This provides excellent space for each command
+		width: longestContent,
+	}
+}
 
-	return buttonGroupStyle.Render(grid)
+func (bg *envCommandButtons) View(selectedCommand int) string {
+	for i := range bg.buttons {
+		if i == selectedCommand {
+			bg.buttons[i].style = activeLargeButtonStyle
+		} else {
+			bg.buttons[i].style = defaultLargeButtonStyle
+		}
+	}
+
+	var row []string
+	for _, button := range bg.buttons {
+		row = append(row, button.View())
+	}
+
+	grid := lipgloss.JoinHorizontal(lipgloss.Center, row...)
+
+	return buttonLargeGroupStyle.Render(grid)
 }
 
 func max(a, b int) int {
