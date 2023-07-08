@@ -90,3 +90,8 @@ run: $(BIN)
 
 debug:
 	@dlv debug --listen ":2345" --headless $(BUILD_ENTRY)
+
+install: $(BIN)
+	@echo -e "$(YELLOW)🚀 Installing $(BIN) to appropriate location...$(END)"
+	@$(GOINSTALL) $(BUILD_ENTRY)
+	@echo -e "$(GREEN)✅ Installation complete!$(END)"
