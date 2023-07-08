@@ -58,7 +58,7 @@ func (c *VagrantClient) GetVersion() (string, error) {
 }
 
 func (c *VagrantClient) GetGlobalStatus() (result string, err error) {
-	return c.RunCommand("global-status --machine-readable")
+	return c.RunCommand("global-status --prune --machine-readable")
 }
 
 func (c *VagrantClient) GetStatusForID(machineID string) (result string, err error) {
