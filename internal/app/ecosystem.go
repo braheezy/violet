@@ -1,6 +1,7 @@
 package app
 
 import (
+	"errors"
 	"path"
 	"strings"
 
@@ -79,8 +80,14 @@ func createEcosystem(client *vagrant.VagrantClient) (Ecosystem, error) {
 }
 
 // Simple helper to get the specific machine the user is interacting with
-func (e *Ecosystem) currentMachine() *Machine {
-	return &e.environments[e.selectedEnv].machines[e.selectedMachine]
+func (e *Ecosystem) currentMachine() (*Machine, error) {
+	if e.selectedEnv >= len(e.environments) {
+		return nil, errors.New("tried to access environment outside of ecosystem")
+	} else if e.selectedMachine >= len(e.environments[e.selectedEnv].machines) {
+		return nil, errors.New("tried to access machine outside of ecosystem")
+	} else {
+		return &e.environments[e.selectedEnv].machines[e.selectedMachine], nil
+	}
 }
 
 func (e *Ecosystem) currentEnv() *Environment {

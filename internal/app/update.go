@@ -116,7 +116,11 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch {
 		case key.Matches(msg, v.keys.Left):
 			currentEnv := v.ecosystem.currentEnv()
-			currentMachine := v.ecosystem.currentMachine()
+			currentMachine, err := v.ecosystem.currentMachine()
+			if err != nil {
+				v.setErrorMessage(err.Error())
+				return v, nil
+			}
 			if currentEnv.hasFocus {
 				if currentEnv.selectedCommand == 0 {
 					currentEnv.selectedCommand = len(supportedEnvCommands) - 1
@@ -132,7 +136,11 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case key.Matches(msg, v.keys.Right):
 			currentEnv := v.ecosystem.currentEnv()
-			currentMachine := v.ecosystem.currentMachine()
+			currentMachine, err := v.ecosystem.currentMachine()
+			if err != nil {
+				v.setErrorMessage(err.Error())
+				return v, nil
+			}
 			if currentEnv.hasFocus {
 				if currentEnv.selectedCommand == len(supportedEnvCommands)-1 {
 					currentEnv.selectedCommand = 0
@@ -192,7 +200,7 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				tickCmd := v.spinner.spinner.Tick
 				return v, tea.Batch(runCommand, tickCmd)
 			} else {
-				currentMachine := v.ecosystem.currentMachine()
+				currentMachine, _ := v.ecosystem.currentMachine()
 				vagrantCommand := supportedMachineCommands[currentMachine.selectedCommand]
 				/*
 					TODO: This doesn't support running commands in a desktop-less environment that doesn't have an external terminal to put commands on. One approach is to use `screen` to create virtual screen.
@@ -318,7 +326,8 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		} else {
 			// Getting a runMsg means something happened so run async task to get
 			// new status on the machine the command was just run on.
-			return v, v.createMachineStatusCmd(v.ecosystem.currentMachine().machineID)
+			currentMachine, _ := v.ecosystem.currentMachine()
+			return v, v.createMachineStatusCmd(currentMachine.machineID)
 		}
 
 	case ecosystemErrMsg:

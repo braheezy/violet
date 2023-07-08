@@ -36,8 +36,9 @@ func (v Violet) View() (view string) {
 		view += "\n"
 		view += errorStyle.Render(v.errorMessage)
 	} else if v.spinner.show {
-		commandIndex := v.ecosystem.currentMachine().selectedCommand
-		targetName := v.ecosystem.currentMachine().name
+		currentMachine, _ := v.ecosystem.currentMachine()
+		commandIndex := currentMachine.selectedCommand
+		targetName := currentMachine.name
 		if v.ecosystem.currentEnv().hasFocus {
 			commandIndex = v.ecosystem.currentEnv().selectedCommand
 			targetName = v.ecosystem.currentEnv().name
