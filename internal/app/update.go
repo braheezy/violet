@@ -210,7 +210,10 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						c.Dir = currentMachine.home
 					}
 					runCommand := tea.ExecProcess(c, func(err error) tea.Msg {
-						return runErrMsg(err.Error())
+						if err != nil {
+							return runErrMsg(err.Error())
+						}
+						return nil
 					})
 					return v, runCommand
 				} else {
