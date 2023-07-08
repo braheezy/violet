@@ -5,9 +5,6 @@ Violet is a colorful TUI frontend to manage Vagrant virtual machines. Quickly vi
 
 ![Violet Gif](./assets/demo.gif)
 
-## Project Status
-Violet is in early stages of development and is not recommended for production use cases. It probably handles most error cases poorly. It hardly cares about terminal types and sizes.
-
 ## Getting Started
 
 Violet is delivered as a single binary for various platforms. See the [Releases](https://github.com/braheezy/violet/releases) page for the latest builds.
@@ -25,23 +22,26 @@ For best results, it helps to have existing Vagrant VMs.
 ### Usage
 Open a terminal and run the program:
 
-    $ violet
+    violet
 
 See the following table for how to interact with Violet:
 | Action                  | Key        | Description                                               |
 |-------------------------|------------|-----------------------------------------------------------|
-| Switch Environment Tab  | Tab        | Cycle through different Vagrant environments.             |
-| Select Virtual Machines | Left/Right | Cycle through the different VMs in a Vagrant environment. |
-| Select Command          | 1,2,3,4    | Choose the command by number                              |
-| Scroll Vagrant Output   | Up/Down    | Scroll the Vagrant output area to see more text           |
+| Switch Environment Tab  | Tab/Shift+Tab | Cycle through found Vagrant environments       |
+| Select Command | Left/Right | Cycle through the supported Vagrant commands |
+| Run command | Enter | Run the highlighted command on the selected entity |
+| Toggle Environments/VM control | Space bar | Operate on the environment as a whole or individual machines |
+
 
 Note that Violet does not aim to support all Vagrant commands and will provide a poor interface for troubleshooting issues with Vagrant, VMs, hypervisors, etc.
 
 ## Development
 
-The `Makefile` contains the most common developer actions to perform. See `make help`.
+The `Makefile` contains the most common developer actions to perform. See `make help` for everything, or build and run for your machine:
 
-## Built with :heart: using other people's tools
+    make run
+
+## Acknowledgements
 
 * [bubbletea](https://github.com/charmbracelet/bubbletea) - Main TUI framework
 * [lipgloss](https://github.com/charmbracelet/lipgloss) - Styling and colors
@@ -51,15 +51,16 @@ The `Makefile` contains the most common developer actions to perform. See `make 
 
 ## Roadmap
 In somewhat priority order:
-- [ ] Support destroy
 - [x] Reduce magic numbers in sizing
 - [x] Better screen resize support and smarter app sizing in general
 - [x] Bulk operations on VMs, including the entire Environment (e.g. `vagrant up` instead of `vagrant up <machine>`)
 - [x] Error handling:
   - Violet errors: Show in message area.
-- [ ] File logging
+- [x] File logging
+- [x] Icons
 ---
-- [ ] Remember user selections
+- [ ] Support destroy
+- [ ] Remember user selections between
 - [ ] Load VMs and Envs deterministically
 - [ ] Launch SSH sessions in external apps
 - [ ] Mouse support
@@ -70,4 +71,4 @@ In somewhat priority order:
   - Log control
 
 ## Inspiration
-My interest in TUI applications is growing and I wanted something more complicated and useful (than a [game](https://github.com/braheezy/hangman)) to build. And I got to a learn lots of Go!
+My interest in TUI applications was growing and I wanted to build something complicated and useful (more than a [game](https://github.com/braheezy/hangman)).
