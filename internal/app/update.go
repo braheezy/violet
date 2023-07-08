@@ -163,12 +163,14 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				v.ecosystem.selectedMachine = 0
 			} else {
 				v.ecosystem.selectedMachine += 1
+				v.ecosystem.selectedMachine = min(v.ecosystem.selectedMachine, len(v.ecosystem.currentEnv().machines)-1)
 			}
 		case key.Matches(msg, v.keys.Switch):
 			if v.ecosystem.selectedEnv == len(v.ecosystem.environments)-1 {
 				v.ecosystem.selectedEnv = 0
 			} else {
 				v.ecosystem.selectedEnv += 1
+				v.ecosystem.selectedEnv = min(v.ecosystem.selectedEnv, len(v.ecosystem.environments)-1)
 			}
 			return v, nil
 		case key.Matches(msg, v.keys.ShiftTab):
@@ -307,9 +309,12 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return v, v.createMachineStatusCmd(v.ecosystem.currentMachine().machineID)
 		}
 
-	// TODO: Handle error messages (just throw them in the viewport)
 	case ecosystemErrMsg:
+		v.setErrorMessage(msg.Error())
 	case statusErrMsg:
+		v.setErrorMessage(msg.Error())
+	case runErrMsg:
+		v.setErrorMessage(msg.Error())
 	}
 
 	if v.spinner.show {
@@ -319,4 +324,11 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	return v, nil
+}
+
+func min(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }

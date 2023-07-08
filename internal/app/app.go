@@ -49,6 +49,11 @@ type Violet struct {
 	// Current terminal size
 	terminalWidth  int
 	terminalHeight int
+	errorMessage   string
+}
+
+func (v *Violet) setErrorMessage(message string) {
+	v.errorMessage = message
 }
 
 // Return the default Violet model

@@ -31,8 +31,13 @@ func (e ecosystemErrMsg) Error() string { return e.err.Error() }
 // Call `global-status` and translate result into a new Ecosystem
 func createEcosystem(client *vagrant.VagrantClient) (Ecosystem, error) {
 	// Fetch (not stream) the current global status
-	result := client.GetGlobalStatus()
+	result, err := client.GetGlobalStatus()
 	var nilEcosystem Ecosystem
+
+	if err != nil {
+		return nilEcosystem, ecosystemErrMsg{err}
+	}
+
 	results := vagrant.ParseVagrantOutput(result)
 	if results == nil {
 		return nilEcosystem, nil

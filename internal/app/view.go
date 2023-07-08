@@ -49,6 +49,10 @@ func (v Violet) View() (view string) {
 
 		progressView := fmt.Sprintf("%v %v %v\n\n", v.spinner.spinner.View(), title, v.spinner.spinner.View())
 		view += lipgloss.NewStyle().Margin(marginVertical, marginHorizontal).Render(progressView)
+	} else if len(v.errorMessage) > 0 {
+		view += errorTitleStyle.Render("Violet ran into an error: ")
+		view += "\n"
+		view += errorStyle.Render(v.errorMessage)
 	}
 
 	return view

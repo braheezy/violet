@@ -56,6 +56,13 @@ var (
 			Padding(1, 1).
 			Border(lipgloss.RoundedBorder()).
 			UnsetBorderTop()
+	errorTitleStyle = lipgloss.NewStyle().
+			Foreground(theme.Red()).
+			MarginLeft(marginHorizontal)
+	errorStyle = lipgloss.NewStyle().
+			MarginLeft(marginHorizontal).
+			Foreground(theme.BrightRed()).
+			Bold(true)
 )
 
 func tabBorderWithBottom(left, middle, right string) lipgloss.Border {

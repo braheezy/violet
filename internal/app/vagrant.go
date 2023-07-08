@@ -83,7 +83,11 @@ type envStatusMsg struct {
 // Create the tea.Cmd that will get status on an environment.
 func (v *Violet) createEnvStatusCmd(env *Environment) tea.Cmd {
 	return func() tea.Msg {
-		result, _ := v.ecosystem.client.RunCommandInDirectory("status --machine-readable", env.home)
+		result, err := v.ecosystem.client.RunCommandInDirectory("status --machine-readable", env.home)
+
+		if err != nil {
+			return statusErrMsg{err}
+		}
 
 		newStatus := vagrant.ParseVagrantOutput(result)
 		return envStatusMsg{
