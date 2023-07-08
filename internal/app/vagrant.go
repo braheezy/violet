@@ -74,6 +74,33 @@ func (v *Violet) createMachineStatusCmd(identifier string) tea.Cmd {
 	}
 }
 
+type nameStatusMsg struct {
+	machineID string
+	name      string
+}
+
+type nameStatusErrMsg struct{ err error }
+
+func (e nameStatusErrMsg) Error() string { return e.err.Error() }
+
+// Create the tea.Cmd that will get name of a machine.
+func (v *Violet) createNameStatusCmd(identifier string) tea.Cmd {
+	return func() tea.Msg {
+		result, err := v.ecosystem.client.GetStatusForID(identifier)
+
+		if err != nil {
+			return nameStatusErrMsg{err}
+		}
+
+		machineStatus := vagrant.ParseVagrantOutput(result)[0]
+
+		return nameStatusMsg{
+			machineID: identifier,
+			name:      machineStatus.Name,
+		}
+	}
+}
+
 // envStatusMsg is emitted when status on an environment is received.
 type envStatusMsg struct {
 	name   string

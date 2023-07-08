@@ -239,13 +239,23 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Queue up a bunch of async calls to go get those names.
 		for _, env := range eco.environments {
 			for _, machine := range env.machines {
-				statusCmds = append(statusCmds, v.createMachineStatusCmd(machine.machineID))
+				statusCmds = append(statusCmds, v.createNameStatusCmd(machine.machineID))
 			}
 		}
 		// Set the new ecosystem
 		v.ecosystem = eco
 
 		return v, tea.Batch(statusCmds...)
+
+	case nameStatusMsg:
+		// Find the machine this message is about
+		for i, env := range v.ecosystem.environments {
+			for j, machine := range env.machines {
+				if msg.machineID == machine.machineID {
+					v.ecosystem.environments[i].machines[j].name = msg.name
+				}
+			}
+		}
 
 	// New data about a specific machine has come in
 	case machineStatusMsg:
@@ -259,13 +269,12 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					// Found the machine this status message is about.
 					// Status msgs don't return some info so retain existing info
 					updateMachine := Machine{
-						machineID: machine.machineID,
-						provider:  msg.status.Fields["provider-name"],
-						state:     msg.status.Fields["state"],
-						home:      machine.home,
-						name:      msg.status.Name,
-						// Reset the selected command
-						selectedCommand: 0,
+						machineID:       machine.machineID,
+						provider:        msg.status.Fields["provider-name"],
+						state:           msg.status.Fields["state"],
+						home:            machine.home,
+						name:            msg.status.Name,
+						selectedCommand: machine.selectedCommand,
 					}
 					v.ecosystem.environments[i].machines[j] = updateMachine
 				}
@@ -314,6 +323,8 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case statusErrMsg:
 		v.setErrorMessage(msg.Error())
 	case runErrMsg:
+		v.setErrorMessage(msg.Error())
+	case nameStatusErrMsg:
 		v.setErrorMessage(msg.Error())
 	}
 
