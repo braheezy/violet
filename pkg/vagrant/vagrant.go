@@ -57,19 +57,12 @@ func (c *VagrantClient) GetVersion() (string, error) {
 	return version, nil
 }
 
-func (c *VagrantClient) GetGlobalStatus() (result string) {
-	result, _ = c.RunCommand("global-status --machine-readable")
-
-	return result
+func (c *VagrantClient) GetGlobalStatus() (result string, err error) {
+	return c.RunCommand("global-status --machine-readable")
 }
 
 func (c *VagrantClient) GetStatusForID(machineID string) (result string, err error) {
-	result, err = c.RunCommand(fmt.Sprintf("status %v --machine-readable", machineID))
-
-	if err != nil {
-		return "", err
-	}
-	return result, nil
+	return c.RunCommand(fmt.Sprintf("status %v --machine-readable", machineID))
 }
 
 // Run a Vagrant command and return the result as a string with newlines.

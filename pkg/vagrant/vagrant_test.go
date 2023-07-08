@@ -58,8 +58,9 @@ func TestRunCommand(t *testing.T) {
 func TestGetGlobalStatus(t *testing.T) {
 	client, _ := NewVagrantClient()
 
-	result := client.GetGlobalStatus()
+	result, err := client.GetGlobalStatus()
 
+	require.Nil(t, err)
 	require.NotEmpty(t, result)
 }
 
