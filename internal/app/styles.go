@@ -7,14 +7,14 @@ import (
 
 // Tweak these to quickly change app feels
 var defaultDarkTheme = tint.TintKonsolas
-var defaultLightTheme = tint.TintMaterial
+var defaultLightTheme = tint.TintCatppuccinLatte
 var theme = defaultDarkTheme
 
 // Tweak these for a different palette
 var (
 	primaryColor   = theme.Purple()
 	secondaryColor = theme.Yellow()
-	accentColor    = theme.BrightCyan()
+	accentColor    = theme.Cyan()
 	textColor      = theme.Fg()
 
 	inactiveTabBorder = tabBorderWithBottom("┴", "─", "┴")
@@ -78,9 +78,9 @@ var (
 	cardTitleStyle = lipgloss.NewStyle().
 			Bold(true).
 			Foreground(primaryColor).
-			Margin(marginVertical, marginHorizontal)
+			Margin(0, marginHorizontal)
 	cardStatusStyle = lipgloss.NewStyle().
-			MarginLeft(marginHorizontal)
+			MarginLeft(marginHorizontal * 2)
 	statusColors = map[string]lipgloss.TerminalColor{
 		"running":     theme.Green(),
 		"shutoff":     theme.Red(),
@@ -90,14 +90,14 @@ var (
 	cardProviderStyle = lipgloss.NewStyle().
 				Faint(true).
 				Italic(true).
-				MarginLeft(marginHorizontal + 2).
+				MarginLeft(marginHorizontal * 2).
 				Foreground(textColor)
 	defaultCardStyle = lipgloss.NewStyle().
-				Border(lipgloss.NormalBorder(), false, false, false, false).
+				Border(lipgloss.RoundedBorder(), false, false, false, false).
 				MarginLeft(1)
 	selectedCardStyle = defaultCardStyle.Copy().
 				BorderLeft(true).
-				Border(lipgloss.NormalBorder(), false, false, false, true).
+				Border(lipgloss.RoundedBorder(), false, false, false, true).
 				BorderForeground(accentColor).
 				MarginLeft(0)
 

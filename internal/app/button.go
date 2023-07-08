@@ -7,24 +7,24 @@ import (
 var (
 	defaultLargeButtonStyle = lipgloss.NewStyle().
 				Foreground(primaryColor).
-				Background(theme.Bg()).
 				Padding(1)
 	activeLargeButtonStyle = defaultLargeButtonStyle.Copy().
-				Foreground(textColor).
-				Background(primaryColor).
+				Foreground(secondaryColor).
 				Bold(true)
 	buttonLargeGroupStyle = lipgloss.NewStyle().
+				Border(lipgloss.RoundedBorder(), true).
+				BorderForeground(primaryColor).
 				Margin(0, 1)
 
 	defaultSmallButtonStyle = lipgloss.NewStyle().
 				Foreground(primaryColor).
 				Margin(0, 1)
 	activeSmallButtonStyle = defaultSmallButtonStyle.Copy().
-				Foreground(textColor).
+				Foreground(secondaryColor).
 				Bold(true)
 	buttonSmallGroupStyle = lipgloss.NewStyle().
 				Margin(marginVertical, marginHorizontal).
-				Border(lipgloss.NormalBorder(), true).
+				Border(lipgloss.RoundedBorder(), true).
 				BorderForeground(primaryColor)
 )
 
@@ -81,19 +81,14 @@ type envCommandButtons buttonGroup
 
 func newEnvCommandButtons(supportedVagrantCommands []string) envCommandButtons {
 	var buttons []button
-	var longestContent int
 	// Create buttons based on supported commands
 	for _, command := range supportedVagrantCommands {
 		cont := symbols[command] + " " + command
-		longestContent = max(longestContent, len(cont))
 		buttons = append(buttons, button{
 			content: cont,
 			style:   defaultLargeButtonStyle,
 		})
 	}
-	// Set the button width based on longest command
-	defaultLargeButtonStyle.Width(longestContent)
-	activeLargeButtonStyle.Width(longestContent)
 
 	return envCommandButtons{
 		buttons: buttons,
@@ -117,11 +112,4 @@ func (bg *envCommandButtons) View(selectedCommand int, hasFocus bool) string {
 	grid := lipgloss.JoinHorizontal(lipgloss.Center, row...)
 
 	return buttonLargeGroupStyle.Render(grid)
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
 }
