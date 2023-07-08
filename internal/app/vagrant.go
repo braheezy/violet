@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/braheezy/violet/pkg/vagrant"
@@ -28,6 +29,7 @@ type runErrMsg string
 // Create the tea.Cmd that will run command on the machine specified by identifier.
 func (v *Violet) createMachineRunCmd(command string, identifier string) tea.Cmd {
 	return func() tea.Msg {
+		log.Printf("Running %v on %v", command, identifier)
 		content, err := v.ecosystem.client.RunCommand(fmt.Sprintf("%v %v", command, identifier))
 
 		if err != nil {
@@ -41,6 +43,7 @@ func (v *Violet) createMachineRunCmd(command string, identifier string) tea.Cmd 
 // Create the tea.Cmd that will run command in the directory.
 func (v *Violet) createEnvRunCmd(command string, dir string) tea.Cmd {
 	return func() tea.Msg {
+		log.Printf("Running %v in %v", command, dir)
 		content, err := v.ecosystem.client.RunCommandInDirectory(command, dir)
 
 		if err != nil {
@@ -66,6 +69,7 @@ func (e statusErrMsg) Error() string { return e.err.Error() }
 // Create the tea.Cmd that will get status on a machine.
 func (v *Violet) createMachineStatusCmd(identifier string) tea.Cmd {
 	return func() tea.Msg {
+		log.Printf("Getting status for %v", identifier)
 		result, err := v.ecosystem.client.GetStatusForID(identifier)
 
 		if err != nil {
@@ -94,6 +98,7 @@ func (e nameStatusErrMsg) Error() string { return e.err.Error() }
 // Create the tea.Cmd that will get name of a machine.
 func (v *Violet) createNameStatusCmd(identifier string) tea.Cmd {
 	return func() tea.Msg {
+		log.Printf("Getting status for %v", identifier)
 		result, err := v.ecosystem.client.GetStatusForID(identifier)
 
 		if err != nil {
@@ -118,6 +123,7 @@ type envStatusMsg struct {
 // Create the tea.Cmd that will get status on an environment.
 func (v *Violet) createEnvStatusCmd(env *Environment) tea.Cmd {
 	return func() tea.Msg {
+		log.Printf("Getting status in %v", env.home)
 		result, err := v.ecosystem.client.RunCommandInDirectory("status --machine-readable", env.home)
 
 		if err != nil {
