@@ -15,9 +15,7 @@ var supportedVagrantCommands = []string{"up", "halt", "ssh", "reload", "provisio
 type runMsg struct {
 	content string
 }
-type runErrMsg struct{ err error }
-
-func (e runErrMsg) Error() string { return e.err.Error() }
+type runErrMsg string
 
 // Create the tea.Cmd that will run command on the machine specified by identifier.
 func (v *Violet) createMachineRunCmd(command string, identifier string) tea.Cmd {
@@ -25,7 +23,7 @@ func (v *Violet) createMachineRunCmd(command string, identifier string) tea.Cmd 
 		content, err := v.ecosystem.client.RunCommand(fmt.Sprintf("%v %v", command, identifier))
 
 		if err != nil {
-			return runErrMsg{err}
+			return runErrMsg(vagrant.ParseVagrantError(err.Error()))
 		}
 
 		return runMsg{content: content}
@@ -38,7 +36,7 @@ func (v *Violet) createEnvRunCmd(command string, dir string) tea.Cmd {
 		content, err := v.ecosystem.client.RunCommandInDirectory(command, dir)
 
 		if err != nil {
-			return runErrMsg{err}
+			return runErrMsg(vagrant.ParseVagrantError(err.Error()))
 		}
 
 		return runMsg{content: content}

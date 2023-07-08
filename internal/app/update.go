@@ -210,7 +210,7 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						c.Dir = currentMachine.home
 					}
 					runCommand := tea.ExecProcess(c, func(err error) tea.Msg {
-						return runErrMsg{err: err}
+						return runErrMsg(err.Error())
 					})
 					return v, runCommand
 				} else {
@@ -323,7 +323,7 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case statusErrMsg:
 		v.setErrorMessage(msg.Error())
 	case runErrMsg:
-		v.setErrorMessage(msg.Error())
+		v.setErrorMessage(string(msg))
 	case nameStatusErrMsg:
 		v.setErrorMessage(msg.Error())
 	}

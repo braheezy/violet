@@ -131,6 +131,16 @@ func Contains(slice []MachineInfo, item MachineInfo) bool {
 	return false
 }
 
+func ParseVagrantError(output string) string {
+	errRegex := regexp.MustCompile(`^\s*\d+,(.*),error-exit,(.+)$`)
+	for _, line := range strings.Split(output, "\n") {
+		if m := errRegex.FindStringSubmatch(line); m != nil {
+			return m[2]
+		}
+	}
+	return ""
+}
+
 // Generically parses the output from a Vagrant command and returns the result.
 // Multi-machine environments may result in a list of Result objects
 func ParseVagrantOutput(output string) []MachineInfo {
