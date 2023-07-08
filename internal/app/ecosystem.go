@@ -100,7 +100,7 @@ func (e *Ecosystem) View() (result string) {
 	for i, machine := range selectedEnv.machines {
 		// "Viewing" a machine will get it's specific info
 		machineView := machine.View()
-		commands := e.machineCommands.View(machine.selectedCommand)
+		commands := e.machineCommands.View(machine.selectedCommand, !selectedEnv.hasFocus)
 		cardInfo := lipgloss.JoinHorizontal(lipgloss.Top, machineView, commands)
 		if !selectedEnv.hasFocus && i == e.selectedMachine {
 			cardInfo = selectedCardStyle.Render(cardInfo)
@@ -116,7 +116,7 @@ func (e *Ecosystem) View() (result string) {
 		if selectedEnv.hasFocus {
 			envTitle = selectedEnvCardStyle.Render(selectedEnv.name)
 		}
-		envCard := lipgloss.JoinHorizontal(lipgloss.Center, envTitle, envCommands.View(selectedEnv.selectedCommand))
+		envCard := lipgloss.JoinHorizontal(lipgloss.Center, envTitle, envCommands.View(selectedEnv.selectedCommand, selectedEnv.hasFocus))
 
 		tabContent := envCard + "\n" + strings.Join(machineCards, "\n")
 

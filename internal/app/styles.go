@@ -101,8 +101,9 @@ var (
 				BorderForeground(accentColor).
 				MarginLeft(0)
 
-	envCardTitleStyle    = cardTitleStyle.Copy()
-	selectedEnvCardStyle = lipgloss.NewStyle().
+	envCardTitleStyle = cardTitleStyle.Copy().
+				MarginLeft(1)
+	selectedEnvCardStyle = envCardTitleStyle.Copy().
 				Bold(true).
 				Foreground(accentColor)
 )

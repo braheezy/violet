@@ -14,7 +14,7 @@ var (
 				Background(primaryColor).
 				Bold(true)
 	buttonLargeGroupStyle = lipgloss.NewStyle().
-				Margin(marginVertical, marginHorizontal, marginVertical, marginHorizontal*2)
+				Margin(0, 1)
 
 	defaultSmallButtonStyle = lipgloss.NewStyle().
 				Foreground(primaryColor).
@@ -39,7 +39,6 @@ func (b *button) View() string {
 
 type buttonGroup struct {
 	buttons []button
-	width   int
 }
 
 type machineCommandButtons buttonGroup
@@ -59,16 +58,15 @@ func newMachineCommandButtons(supportedVagrantCommands []string) machineCommandB
 	}
 }
 
-func (bg *machineCommandButtons) View(selectedCommand int) string {
+func (bg *machineCommandButtons) View(selectedCommand int, hasFocus bool) string {
 	for i := range bg.buttons {
-		if i == selectedCommand {
+		if i == selectedCommand && hasFocus {
 			bg.buttons[i].style = activeSmallButtonStyle.Copy().Padding(0)
 		} else {
 			bg.buttons[i].style = defaultSmallButtonStyle.Copy().Padding(0)
 		}
 	}
 
-	// TODO: Hacky to hardcode the row items. Is there a better way?
 	var row []string
 	for _, button := range bg.buttons {
 		row = append(row, button.View())
@@ -99,14 +97,12 @@ func newEnvCommandButtons(supportedVagrantCommands []string) envCommandButtons {
 
 	return envCommandButtons{
 		buttons: buttons,
-		// This provides excellent space for each command
-		width: longestContent,
 	}
 }
 
-func (bg *envCommandButtons) View(selectedCommand int) string {
+func (bg *envCommandButtons) View(selectedCommand int, hasFocus bool) string {
 	for i := range bg.buttons {
-		if i == selectedCommand {
+		if i == selectedCommand && hasFocus {
 			bg.buttons[i].style = activeLargeButtonStyle
 		} else {
 			bg.buttons[i].style = defaultLargeButtonStyle
