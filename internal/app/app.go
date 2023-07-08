@@ -6,6 +6,7 @@ The main entry point for the application.
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 
@@ -23,6 +24,9 @@ func Run() {
 		} else {
 			defer f.Close()
 		}
+	} else {
+		// Set up a dummy logger that discards log output
+		log.SetOutput(io.Discard)
 	}
 	// Set the color palette for the application.
 	if lipgloss.HasDarkBackground() {
