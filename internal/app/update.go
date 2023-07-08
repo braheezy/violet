@@ -171,14 +171,12 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				v.ecosystem.selectedMachine = 0
 			} else {
 				v.ecosystem.selectedMachine += 1
-				v.ecosystem.selectedMachine = min(v.ecosystem.selectedMachine, len(v.ecosystem.currentEnv().machines)-1)
 			}
 		case key.Matches(msg, v.keys.Switch):
 			if v.ecosystem.selectedEnv == len(v.ecosystem.environments)-1 {
 				v.ecosystem.selectedEnv = 0
 			} else {
 				v.ecosystem.selectedEnv += 1
-				v.ecosystem.selectedEnv = min(v.ecosystem.selectedEnv, len(v.ecosystem.environments)-1)
 			}
 			return v, nil
 		case key.Matches(msg, v.keys.ShiftTab):
