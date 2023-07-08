@@ -8,10 +8,12 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+// Order matters here.
+var supportedVagrantCommands = []string{"up", "halt", "ssh", "reload", "provision"}
+
 // runMsg is emitted after a command is run.
 type runMsg struct {
 	content string
-	err     error
 }
 type runErrMsg struct{ err error }
 

@@ -1,6 +1,8 @@
 package app
 
 import (
+	"math/rand"
+
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -35,8 +37,9 @@ type currentSpinner struct {
 
 func newSpinner() currentSpinner {
 	s := spinner.New()
-	s.Spinner = spinners[0]
+	s.Spinner = spinners[rand.Intn(len(spinners))]
 	return currentSpinner{
 		spinner: s,
+		verb:    verbs[rand.Intn(len(verbs))],
 	}
 }

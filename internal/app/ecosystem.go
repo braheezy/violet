@@ -152,9 +152,6 @@ func (e *Ecosystem) View() (result string) {
 	return result
 }
 
-// Order matters here.
-var supportedVagrantCommands = []string{"up", "halt", "ssh", "reload", "provision"}
-
 // Environment represents a single Vagrant project
 type Environment struct {
 	// Friendly name for the Environment
