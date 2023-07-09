@@ -2,22 +2,14 @@ package app
 
 import (
 	"fmt"
-	"math/rand"
 
 	"github.com/charmbracelet/lipgloss"
 )
 
-func randomEmoji() string {
-	emojis := []rune("🍦🧋🍡🤠👾😭🦊🐯🦆🥨🎏🍔🍒🍥🎮📦🦁🐶🐸🍕🥐🧲🚒🥇🏆🌽")
-	return string(emojis[rand.Intn(len(emojis))])
-}
-
-var verbs = []string{"Running", "Executing", "Performing", "Invoking", "Launching", "Casting"}
-
 func (v Violet) View() (view string) {
 	// Title view area
-	title := titleStyle.Render("Violet: ")
-	greeter := greeterStyle.Render("Pretty manager for Vagrant " + randomEmoji())
+	title := titleStyle.Render("Violet:")
+	greeter := greeterStyle.Render("Pretty manager for Vagrant")
 	titleGreeter := title + greeter
 	view += lipgloss.NewStyle().Margin(marginVertical, marginHorizontal).Render(titleGreeter)
 

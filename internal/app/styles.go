@@ -13,8 +13,7 @@ var theme = defaultDarkTheme
 // Tweak these for a different palette
 var (
 	primaryColor   = theme.Purple()
-	secondaryColor = theme.Yellow()
-	accentColor    = theme.Cyan()
+	secondaryColor = theme.Cyan()
 	textColor      = theme.Fg()
 
 	inactiveTabBorder = tabBorderWithBottom("┴", "─", "┴")
@@ -37,7 +36,8 @@ var (
 	titleStyle = lipgloss.NewStyle().
 			Bold(true).
 			Italic(true).
-			Foreground(primaryColor)
+			Foreground(primaryColor).
+			Padding(0, 1)
 	greeterStyle = lipgloss.NewStyle().
 			Foreground(secondaryColor)
 
@@ -49,7 +49,7 @@ var (
 				Foreground(textColor)
 	activeTabStyle = inactiveTabStyle.Copy().
 			Border(activeTabBorder, true).
-			Foreground(accentColor)
+			Foreground(secondaryColor)
 	tabGapStyle = inactiveTabStyle.Copy().
 			Border(gapBorder)
 	tabWindowStyle = lipgloss.NewStyle().
@@ -65,6 +65,8 @@ var (
 			Foreground(theme.BrightRed()).
 			Bold(true)
 )
+
+var verbs = []string{"Running", "Executing", "Performing", "Invoking", "Launching", "Casting"}
 
 func tabBorderWithBottom(left, middle, right string) lipgloss.Border {
 	border := lipgloss.RoundedBorder()
@@ -97,7 +99,7 @@ var (
 	selectedCardStyle = defaultCardStyle.Copy().
 				BorderLeft(true).
 				Border(lipgloss.RoundedBorder(), false, false, false, true).
-				BorderForeground(accentColor).
+				BorderForeground(secondaryColor).
 				PaddingLeft(1)
 
 	envCardTitleStyle = cardTitleStyle.Copy().
@@ -105,5 +107,5 @@ var (
 				Width(textWrap)
 	selectedEnvCardStyle = envCardTitleStyle.Copy().
 				Bold(true).
-				Foreground(accentColor)
+				Foreground(secondaryColor)
 )

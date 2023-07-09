@@ -26,7 +26,7 @@ var (
 			Italic(true)
 	spinnerCommandStyle = spinnerStyle.Copy().
 				Bold(true).
-				Foreground(accentColor)
+				Foreground(secondaryColor)
 )
 
 type currentSpinner struct {
