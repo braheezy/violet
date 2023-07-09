@@ -96,7 +96,7 @@ func (e *Ecosystem) currentEnv() *Environment {
 
 func (e *Ecosystem) View() (result string) {
 	if e.environments == nil {
-		return "No environments found :("
+		return lipgloss.NewStyle().Foreground(textColor).Italic(true).Faint(true).Render("Still looking for environments...")
 	}
 
 	// machineCards will be the set of machines to show for the selected env.
