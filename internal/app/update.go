@@ -346,10 +346,3 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	return v, nil
 }
-
-func min(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}

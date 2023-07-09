@@ -14,7 +14,7 @@ var (
 	buttonLargeGroupStyle = lipgloss.NewStyle().
 				Border(lipgloss.RoundedBorder(), true).
 				BorderForeground(primaryColor).
-				Margin(0, 1)
+				Margin(0)
 
 	defaultSmallButtonStyle = lipgloss.NewStyle().
 				Foreground(primaryColor).
@@ -23,7 +23,7 @@ var (
 				Foreground(secondaryColor).
 				Bold(true)
 	buttonSmallGroupStyle = lipgloss.NewStyle().
-				Margin(marginVertical, marginHorizontal).
+				Margin(marginVertical, marginHorizontal, 0).
 				Border(lipgloss.RoundedBorder(), true).
 				BorderForeground(primaryColor)
 )

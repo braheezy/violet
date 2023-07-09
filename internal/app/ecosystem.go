@@ -108,7 +108,7 @@ func (e *Ecosystem) View() (result string) {
 		// "Viewing" a machine will get it's specific info
 		machineView := machine.View()
 		commands := e.machineCommands.View(machine.selectedCommand, !selectedEnv.hasFocus)
-		cardInfo := lipgloss.JoinHorizontal(lipgloss.Top, machineView, commands)
+		cardInfo := lipgloss.JoinHorizontal(lipgloss.Center, machineView, commands)
 		if !selectedEnv.hasFocus && i == e.selectedMachine {
 			cardInfo = selectedCardStyle.Render(cardInfo)
 		} else {
@@ -155,7 +155,7 @@ func (e *Ecosystem) View() (result string) {
 		gap := tabGapStyle.Render(strings.Repeat(" ", gapWidth))
 		tabHeader = lipgloss.JoinHorizontal(lipgloss.Top, tabHeader, gap)
 
-		result = lipgloss.JoinVertical(lipgloss.Left, tabHeader, tabWindowStyle.Render(tabContent))
+		result = lipgloss.JoinVertical(lipgloss.Center, tabHeader, tabWindowStyle.Render(tabContent))
 
 	}
 	return result
@@ -193,7 +193,7 @@ func (m *Machine) View() string {
 
 	// Join the machine info for the card view
 	content := lipgloss.JoinVertical(
-		lipgloss.Left,
+		lipgloss.Right,
 		cardTitleStyle.Render(displayName),
 		cardStatusStyle.Foreground(statusColors[m.state]).Render(m.state),
 		cardProviderStyle.Render(m.provider),

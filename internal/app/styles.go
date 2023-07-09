@@ -32,6 +32,7 @@ var (
 
 	marginVertical   = 1
 	marginHorizontal = 2
+	textWrap         = 12
 
 	titleStyle = lipgloss.NewStyle().
 			Bold(true).
@@ -78,10 +79,9 @@ var (
 	cardTitleStyle = lipgloss.NewStyle().
 			Bold(true).
 			Foreground(primaryColor).
-			Margin(0, marginHorizontal)
-	cardStatusStyle = lipgloss.NewStyle().
-			MarginLeft(marginHorizontal * 2)
-	statusColors = map[string]lipgloss.TerminalColor{
+			Width(textWrap)
+	cardStatusStyle = lipgloss.NewStyle()
+	statusColors    = map[string]lipgloss.TerminalColor{
 		"running":     theme.Green(),
 		"shutoff":     theme.Red(),
 		"stopped":     theme.Red(),
@@ -90,19 +90,19 @@ var (
 	cardProviderStyle = lipgloss.NewStyle().
 				Faint(true).
 				Italic(true).
-				MarginLeft(marginHorizontal * 2).
 				Foreground(textColor)
 	defaultCardStyle = lipgloss.NewStyle().
 				Border(lipgloss.RoundedBorder(), false, false, false, false).
-				MarginLeft(1)
+				PaddingLeft(2)
 	selectedCardStyle = defaultCardStyle.Copy().
 				BorderLeft(true).
 				Border(lipgloss.RoundedBorder(), false, false, false, true).
 				BorderForeground(accentColor).
-				MarginLeft(0)
+				PaddingLeft(1)
 
 	envCardTitleStyle = cardTitleStyle.Copy().
-				MarginLeft(1)
+				MarginLeft(1).
+				Width(textWrap)
 	selectedEnvCardStyle = envCardTitleStyle.Copy().
 				Bold(true).
 				Foreground(accentColor)
