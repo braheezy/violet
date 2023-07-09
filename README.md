@@ -3,7 +3,7 @@ Give [Vagrant](https://developer.hashicorp.com/vagrant) a splash of color :art:
 
 Violet is a colorful TUI frontend to manage Vagrant virtual machines. Quickly view the state of all VMs and issue commands against them!
 
-![Violet Gif](./assets/demo.gif)
+![Violet Gif](./assets/violet.png)
 
 ## Getting Started
 
@@ -41,6 +41,8 @@ The `Makefile` contains the most common developer actions to perform. See `make 
 
     make run
 
+Using the `Vagrantfile`, a Libvirt VM can be created and inside that, scripts from `test/` can create quick dummy Vagrant projects. This can be a safe sandbox environment to experiment with builds of `violet`.
+
 ## Acknowledgements
 
 * [bubbletea](https://github.com/charmbracelet/bubbletea) - Main TUI framework
@@ -49,26 +51,7 @@ The `Makefile` contains the most common developer actions to perform. See `make 
 
 ## Contributing
 
-## Roadmap
-In somewhat priority order:
-- [x] Reduce magic numbers in sizing
-- [x] Better screen resize support and smarter app sizing in general
-- [x] Bulk operations on VMs, including the entire Environment (e.g. `vagrant up` instead of `vagrant up <machine>`)
-- [x] Error handling:
-  - Violet errors: Show in message area.
-- [x] File logging
-- [x] Icons
----
-- [ ] Support destroy
-- [ ] Remember user selections between
-- [ ] Load VMs and Envs deterministically
-- [ ] Launch SSH sessions in external apps
-- [ ] Mouse support
-- [ ] Add VHS to CI
-- [ ] Pagination to handle many environments and/or VMs
-- [ ] Configuration w/ cobra for Env Vars, CLI, and config file:
-  - Theme
-  - Log control
+Please do! Issues and PRs are very welcome.
 
 ## Inspiration
 My interest in TUI applications was growing and I wanted to build something complicated and useful (more than a [game](https://github.com/braheezy/hangman)).
