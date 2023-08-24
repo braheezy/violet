@@ -7,6 +7,7 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	zone "github.com/lrstanley/bubblezone"
 )
 
 // helpKeyMap defines a set of keybindings.
@@ -110,6 +111,19 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if needsRepaint {
 			return v, tea.ClearScreen
 		}
+
+	// User moved the mouse
+	case tea.MouseMsg:
+		if msg.Type == tea.MouseRelease {
+			// Iterate over environment names
+			for i, env := range v.ecosystem.environments {
+				if zone.Get(env.name).InBounds(msg) {
+					v.ecosystem.selectedEnv = i
+					break
+				}
+			}
+		}
+		return v, nil
 
 	// User pressed a key
 	case tea.KeyMsg:

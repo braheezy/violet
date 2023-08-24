@@ -14,6 +14,7 @@ import (
 	"github.com/charmbracelet/bubbles/help"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	zone "github.com/lrstanley/bubblezone"
 )
 
 func Run() {
@@ -34,7 +35,11 @@ func Run() {
 	} else {
 		theme = defaultLightTheme
 	}
-	p := tea.NewProgram(newViolet(), tea.WithAltScreen())
+
+	// Setup mouse tracking
+	zone.NewGlobal()
+
+	p := tea.NewProgram(newViolet(), tea.WithAltScreen(), tea.WithMouseAllMotion())
 	if _, err := p.Run(); err != nil {
 		log.Fatalf("Could not start program :(\n%v\n", err)
 	}
