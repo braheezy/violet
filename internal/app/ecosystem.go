@@ -7,6 +7,7 @@ import (
 
 	"github.com/braheezy/violet/pkg/vagrant"
 	"github.com/charmbracelet/lipgloss"
+	zone "github.com/lrstanley/bubblezone"
 )
 
 // Ecosystem contains the total Vagrant world information
@@ -119,7 +120,6 @@ func (e *Ecosystem) View() (result string) {
 		// This card always exists and controls the top-level environment
 		envTitle := envCardTitleStyle.Render(selectedEnv.name)
 		envCommands := newEnvCommandButtons(supportedEnvCommands)
-		// envCommands = e.commandButtons.View(selectedEnv.selectedCommand)
 		if selectedEnv.hasFocus {
 			envTitle = selectedEnvCardStyle.Render(selectedEnv.name)
 		}
@@ -146,7 +146,7 @@ func (e *Ecosystem) View() (result string) {
 				border.BottomLeft = "├"
 			}
 			style = style.Border(border)
-			tabs = append(tabs, style.Render(env.name))
+			tabs = append(tabs, zone.Mark(env.name, style.Render(env.name)))
 		}
 
 		tabHeader := lipgloss.JoinHorizontal(lipgloss.Top, tabs...)

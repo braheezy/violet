@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/charmbracelet/lipgloss"
+	zone "github.com/lrstanley/bubblezone"
 )
 
 func (v Violet) View() (view string) {
@@ -47,6 +48,9 @@ func (v Violet) View() (view string) {
 		progressView := fmt.Sprintf("%v %v %v\n\n", v.spinner.spinner.View(), title, v.spinner.spinner.View())
 		view += lipgloss.NewStyle().Margin(marginVertical, marginHorizontal).Render(progressView)
 	}
+
+	// Monitor mouse zones and strip injected ANSI sequences
+	view = zone.Scan(view)
 
 	return view
 }
