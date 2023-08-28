@@ -5,8 +5,9 @@ go 1.19
 require (
 	github.com/charmbracelet/bubbles v0.16.1
 	github.com/charmbracelet/bubbletea v0.24.2
-	github.com/charmbracelet/lipgloss v0.7.1
+	github.com/charmbracelet/lipgloss v0.8.0
 	github.com/lrstanley/bubbletint v0.0.0-20221222153826-8c18bc6ecfd0
+	github.com/lrstanley/bubblezone v0.0.0-20230801130530-fb03cf4614da
 	github.com/stretchr/testify v1.8.4
 )
 
@@ -14,7 +15,6 @@ require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/containerd/console v1.0.4-0.20230313162750-1ae8d489ac81 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/lrstanley/bubblezone v0.0.0-20230801130530-fb03cf4614da // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
