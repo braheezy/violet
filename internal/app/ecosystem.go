@@ -57,20 +57,41 @@ func createEcosystem(client *vagrant.VagrantClient) (Ecosystem, error) {
 		machines = append(machines, machine)
 	}
 	// Create different envs by grouping machines based on machine-home
-	envGroups := make(map[string][]Machine)
-	for _, machine := range machines {
-		// TODO: Bug if two different paths have the same folder name e.g. /foo/env1 and /bar/env1 will incorrectly be treated the same
-		envGroups[path.Base(machine.home)] = append(envGroups[path.Base(machine.home)], machine)
+	type EnvironmentGroup struct {
+		Name     string
+		Machines []Machine
 	}
-	var environments []Environment
-	for envName, machines := range envGroups {
-		env := Environment{
-			name:     envName,
-			machines: machines,
-			home:     envGroups[envName][0].home,
-			hasFocus: true,
+	var envGroups []EnvironmentGroup
+	for _, machine := range machines {
+		found := false
+		for i, env := range envGroups {
+			// TODO: Bug if two different paths have the same folder name e.g. /foo/env1 and /bar/env1 will incorrectly be treated the same
+			if env.Name == path.Base(machine.home) {
+				envGroups[i].Machines = append(envGroups[i].Machines, machine)
+				found = true
+				break
+			}
 		}
-		environments = append(environments, env)
+		if !found {
+			env := EnvironmentGroup{
+				Name:     path.Base(machine.home),
+				Machines: []Machine{machine},
+			}
+			envGroups = append(envGroups, env)
+		}
+	}
+
+	var environments []Environment
+	for _, envGroup := range envGroups {
+		if len(envGroup.Machines) > 0 {
+			env := Environment{
+				name:     envGroup.Name,
+				machines: envGroup.Machines,
+				home:     envGroup.Machines[0].home,
+				hasFocus: true,
+			}
+			environments = append(environments, env)
+		}
 	}
 	return Ecosystem{
 		environments:    environments,
