@@ -173,6 +173,11 @@ func (e *Ecosystem) View() (result string) {
 		tabHeader := lipgloss.JoinHorizontal(lipgloss.Top, tabs...)
 		// Create the window effect by creating a blank tab to fill the rest of the width.
 		gapWidth := lipgloss.Width(tabContent) - lipgloss.Width(tabHeader)
+		if gapWidth < 0 {
+			// There's more tabs than the standard width of a tab, so add padding
+			tabContent = lipgloss.NewStyle().MarginRight(gapWidth * -1).Render(tabContent)
+			gapWidth = 0
+		}
 		gap := tabGapStyle.Render(strings.Repeat(" ", gapWidth))
 		tabHeader = lipgloss.JoinHorizontal(lipgloss.Top, tabHeader, gap)
 
