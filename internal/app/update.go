@@ -15,7 +15,7 @@ type helpKeyMap struct {
 	Down          key.Binding
 	Left          key.Binding
 	Right         key.Binding
-	Switch        key.Binding
+	Tab           key.Binding
 	ShiftTab      key.Binding
 	Execute       key.Binding
 	SelectCommand key.Binding
@@ -44,7 +44,7 @@ var keys = helpKeyMap{
 	Right: key.NewBinding(
 		key.WithKeys("right", "l"),
 	),
-	Switch: key.NewBinding(
+	Tab: key.NewBinding(
 		key.WithKeys("tab"),
 		key.WithHelp("⭾/⇧+⭾", "env tab"),
 	),
@@ -83,8 +83,8 @@ func (k helpKeyMap) ShortHelp() []key.Binding {
 // key.Map interface.
 func (k helpKeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
-		{k.SelectMachine, k.SelectCommand, k.Switch}, // first column
-		{k.Space, k.Execute, k.Help, k.Quit},         // second column
+		{k.SelectMachine, k.SelectCommand, k.Tab}, // first column
+		{k.Space, k.Execute, k.Help, k.Quit},      // second column
 	}
 }
 
@@ -185,7 +185,7 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			} else {
 				v.ecosystem.selectedMachine += 1
 			}
-		case key.Matches(msg, v.keys.Switch):
+		case key.Matches(msg, v.keys.Tab):
 			start, end := v.ecosystem.envPager.pg.GetSliceBounds(len(v.ecosystem.environments))
 			if v.ecosystem.envPager.moreIsSelected {
 				// Wrap around to start of tabs
