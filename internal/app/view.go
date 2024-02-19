@@ -11,17 +11,19 @@ func (v Violet) View() (view string) {
 	// Title view area
 	title := titleStyle.Render("Violet:")
 	greeter := greeterStyle.Render("Pretty manager for Vagrant")
-	titleGreeter := title + greeter
-	view += lipgloss.NewStyle().Margin(marginVertical, marginHorizontal).Render(titleGreeter)
+	titleGreeter := lipgloss.NewStyle().Margin(marginVertical, marginHorizontal).Render(title + greeter)
+	view += lipgloss.PlaceHorizontal(v.terminalWidth, lipgloss.Center, titleGreeter)
 
 	help := v.help.View(v.keys)
-	view += lipgloss.NewStyle().
+	helpText := lipgloss.NewStyle().
 		Margin(marginVertical, marginHorizontal).
 		Render(help)
+	view += lipgloss.PlaceHorizontal(v.terminalWidth, lipgloss.Center, helpText)
 	view += "\n"
 
 	// Show the current environments
-	view += v.ecosystem.View()
+	ecosystemView := v.ecosystem.View()
+	view += lipgloss.PlaceHorizontal(v.terminalWidth, lipgloss.Center, ecosystemView)
 	view += "\n\n"
 
 	if len(v.errorMessage) > 0 {

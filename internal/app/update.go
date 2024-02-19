@@ -6,7 +6,6 @@ import (
 
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	zone "github.com/lrstanley/bubblezone"
 )
 
@@ -98,7 +97,7 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// cases. Hopefully this check is good enough to not spam ClearScreen commands.
 		needsRepaint := false
 
-		if msg.Width < lipgloss.Width(v.ecosystem.View()) {
+		if msg.Width < v.terminalWidth {
 			needsRepaint = true
 		}
 
