@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/braheezy/violet/pkg/vagrant"
+	"github.com/charmbracelet/bubbles/paginator"
 	"github.com/charmbracelet/lipgloss"
 	zone "github.com/lrstanley/bubblezone"
 )
@@ -22,6 +23,8 @@ type Ecosystem struct {
 	// Indexes of the respective lists that are currently selected.
 	selectedEnv     int
 	selectedMachine int
+	// Helper to paginate the list of environments
+	envPager environmentPager
 }
 
 // Updates for the entire ecosystem. Usually with results from `global-status`
@@ -30,6 +33,15 @@ type ecosystemMsg Ecosystem
 type ecosystemErrMsg struct{ err error }
 
 func (e ecosystemErrMsg) Error() string { return e.err.Error() }
+
+type environmentPager struct {
+	pg             paginator.Model
+	moreIsSelected bool
+}
+
+func (ep *environmentPager) hasMultiplePages() bool {
+	return ep.pg.TotalPages > 1
+}
 
 // Call `global-status` and translate result into a new Ecosystem
 func createEcosystem(client *vagrant.VagrantClient) (Ecosystem, error) {
@@ -93,11 +105,17 @@ func createEcosystem(client *vagrant.VagrantClient) (Ecosystem, error) {
 			environments = append(environments, env)
 		}
 	}
+
+	pager := paginator.New()
+	pager.PerPage = 5
+	pager.SetTotalPages(len(environments))
+
 	return Ecosystem{
 		environments:    environments,
 		client:          client,
 		machineCommands: newMachineCommandButtons(supportedMachineCommands),
 		envCommands:     newEnvCommandButtons(supportedEnvCommands),
+		envPager:        environmentPager{pg: pager},
 	}, nil
 }
 
@@ -121,39 +139,14 @@ func (e *Ecosystem) View() (result string) {
 		return lipgloss.NewStyle().Foreground(textColor).Italic(true).Faint(true).Render("Still looking for environments...")
 	}
 
-	// machineCards will be the set of machines to show for the selected env.
-	// They are dealt with first so we know the size of content we need to
-	// wrap in "tabs"
-	machineCards := []string{}
-	selectedEnv := e.environments[e.selectedEnv]
-	selectedMachine := selectedEnv.machines[e.selectedMachine]
-	// "Viewing" a machine will get it's specific info
-	machineView := selectedMachine.View()
-	commands := e.machineCommands.View(selectedMachine.selectedCommand, !selectedEnv.hasFocus)
-	cardInfo := lipgloss.JoinHorizontal(lipgloss.Center, machineView, commands)
-	if !selectedEnv.hasFocus {
-		cardInfo = selectedCardStyle.Render(cardInfo)
-	}
-
-	machineCards = append(machineCards, cardInfo)
-
-	// This card always exists and controls the top-level environment
-	envTitle := envCardTitleStyle.Render(selectedEnv.name)
-	envCommands := newEnvCommandButtons(supportedEnvCommands)
-	if selectedEnv.hasFocus {
-		envTitle = selectedEnvCardStyle.Render(selectedEnv.name)
-	}
-	envCard := lipgloss.JoinHorizontal(lipgloss.Center, envTitle, envCommands.View(selectedEnv.selectedCommand, selectedEnv.hasFocus))
-
-	tabContent := envCard + "\n" + strings.Join(machineCards, "\n")
-
-	// Now create the tab headers, one for each environment.
+	// Create the tab headers, one for each environment.
 	var tabs []string
-	for i, env := range e.environments {
+	start, end := e.envPager.pg.GetSliceBounds(len(e.environments))
+	for i, env := range e.environments[start:end] {
 		// Figure out which "tab" is selected and stylize accordingly
 		var style lipgloss.Style
 		isFirst, _, isActive := i == 0, i == len(e.environments)-1, i == e.selectedEnv
-		if isActive {
+		if isActive && !e.envPager.moreIsSelected {
 			style = activeTabStyle.Copy()
 		} else {
 			style = inactiveTabStyle.Copy()
@@ -167,6 +160,51 @@ func (e *Ecosystem) View() (result string) {
 		}
 		style = style.Border(border)
 		tabs = append(tabs, zone.Mark(env.name, style.Render(env.name)))
+	}
+
+	var tabContent string
+
+	// If there's paged environments, show a tab with a paged indicator
+	if e.envPager.hasMultiplePages() {
+		var style lipgloss.Style
+		if e.envPager.moreIsSelected {
+			style = activeTabStyle.Copy()
+		} else {
+			style = inactiveTabStyle.Copy()
+		}
+		tabs = append(tabs, zone.Mark("more", style.Render("➔ ")))
+	}
+
+	if e.envPager.moreIsSelected {
+		// Show More tab content
+		tabContent = "There's more stuff ova there ->"
+	} else {
+
+		// machineCards will be the set of machines to show for the selected env.
+		// They are dealt with first so we know the size of content we need to
+		// wrap in "tabs"
+		machineCards := []string{}
+		selectedEnv := e.environments[e.selectedEnv]
+		selectedMachine := selectedEnv.machines[e.selectedMachine]
+		// "Viewing" a machine will get it's specific info
+		machineView := selectedMachine.View()
+		commands := e.machineCommands.View(selectedMachine.selectedCommand, !selectedEnv.hasFocus)
+		cardInfo := lipgloss.JoinHorizontal(lipgloss.Center, machineView, commands)
+		if !selectedEnv.hasFocus {
+			cardInfo = selectedCardStyle.Render(cardInfo)
+		}
+
+		machineCards = append(machineCards, cardInfo)
+
+		// This card always exists and controls the top-level environment
+		envTitle := envCardTitleStyle.Render(selectedEnv.name)
+		envCommands := newEnvCommandButtons(supportedEnvCommands)
+		if selectedEnv.hasFocus {
+			envTitle = selectedEnvCardStyle.Render(selectedEnv.name)
+		}
+		envCard := lipgloss.JoinHorizontal(lipgloss.Center, envTitle, envCommands.View(selectedEnv.selectedCommand, selectedEnv.hasFocus))
+
+		tabContent = envCard + "\n" + strings.Join(machineCards, "\n")
 	}
 
 	tabHeader := lipgloss.JoinHorizontal(lipgloss.Top, tabs...)

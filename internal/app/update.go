@@ -187,17 +187,37 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				v.ecosystem.selectedMachine += 1
 			}
 		case key.Matches(msg, v.keys.Switch):
-			if v.ecosystem.selectedEnv == len(v.ecosystem.environments)-1 {
-				v.ecosystem.selectedEnv = 0
+			start, end := v.ecosystem.envPager.pg.GetSliceBounds(len(v.ecosystem.environments))
+			if v.ecosystem.envPager.moreIsSelected {
+				// Wrap around to start of tabs
+				v.ecosystem.selectedEnv = start
+				v.ecosystem.envPager.moreIsSelected = false
 			} else {
 				v.ecosystem.selectedEnv += 1
+				if v.ecosystem.selectedEnv == len(v.ecosystem.environments[start:end]) && v.ecosystem.envPager.hasMultiplePages() {
+					// User selected the More tab
+					v.ecosystem.envPager.moreIsSelected = true
+					v.ecosystem.selectedEnv = -1
+				}
 			}
 			return v, nil
 		case key.Matches(msg, v.keys.ShiftTab):
-			if v.ecosystem.selectedEnv == 0 {
-				v.ecosystem.selectedEnv = len(v.ecosystem.environments) - 1
+			start, end := v.ecosystem.envPager.pg.GetSliceBounds(len(v.ecosystem.environments))
+			if v.ecosystem.selectedEnv == start {
+				if v.ecosystem.envPager.hasMultiplePages() {
+					// User selected the More tab
+					v.ecosystem.envPager.moreIsSelected = true
+					v.ecosystem.selectedEnv = -1
+				} else {
+					v.ecosystem.selectedEnv = end
+				}
 			} else {
-				v.ecosystem.selectedEnv -= 1
+				if v.ecosystem.envPager.moreIsSelected {
+					v.ecosystem.envPager.moreIsSelected = false
+					v.ecosystem.selectedEnv = end - 1
+				} else {
+					v.ecosystem.selectedEnv -= 1
+				}
 			}
 			return v, nil
 		case key.Matches(msg, v.keys.Space):
