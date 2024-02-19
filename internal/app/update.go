@@ -189,7 +189,7 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			start, end := v.ecosystem.envPager.pg.GetSliceBounds(len(v.ecosystem.environments))
 			if v.ecosystem.envPager.moreIsSelected {
 				// Wrap around to start of tabs
-				v.ecosystem.selectedEnv = start
+				v.ecosystem.selectedEnv = start + (v.ecosystem.envPager.pg.Page * v.ecosystem.envPager.pg.PerPage)
 				v.ecosystem.envPager.moreIsSelected = false
 			} else {
 				v.ecosystem.selectedEnv += 1
@@ -208,12 +208,12 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					v.ecosystem.envPager.moreIsSelected = true
 					v.ecosystem.selectedEnv = -1
 				} else {
-					v.ecosystem.selectedEnv = end
+					v.ecosystem.selectedEnv = end + (v.ecosystem.envPager.pg.Page * v.ecosystem.envPager.pg.PerPage)
 				}
 			} else {
 				if v.ecosystem.envPager.moreIsSelected {
 					v.ecosystem.envPager.moreIsSelected = false
-					v.ecosystem.selectedEnv = end - 1
+					v.ecosystem.selectedEnv = end + (v.ecosystem.envPager.pg.Page * v.ecosystem.envPager.pg.PerPage) - 1
 				} else {
 					v.ecosystem.selectedEnv -= 1
 				}
@@ -223,48 +223,56 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			v.ecosystem.currentEnv().hasFocus = !v.ecosystem.currentEnv().hasFocus
 			return v, nil
 		case key.Matches(msg, v.keys.Execute):
-			if v.ecosystem.currentEnv().hasFocus {
-				vagrantCommand := supportedMachineCommands[v.ecosystem.currentEnv().selectedCommand]
-				runCommand := v.createEnvRunCmd(vagrantCommand, v.ecosystem.currentEnv().home)
-				v.spinner.show = true
-				// This must be sent for the spinner to spin
-				tickCmd := v.spinner.spinner.Tick
-				return v, tea.Batch(runCommand, tickCmd)
+			if v.ecosystem.envPager.moreIsSelected {
+				// User wants to see new env page
+				v.ecosystem.envPager.pg.NextPage()
+				start, _ := v.ecosystem.envPager.pg.GetSliceBounds(len(v.ecosystem.environments))
+				v.ecosystem.selectedEnv = start
+				v.ecosystem.envPager.moreIsSelected = false
 			} else {
-				currentMachine, _ := v.ecosystem.currentMachine()
-				vagrantCommand := supportedMachineCommands[currentMachine.selectedCommand]
-				/*
-					TODO: This doesn't support running commands in a desktop-less environment that doesn't have an external terminal to put commands on. One approach is to use `screen` to create virtual screen.
-
-					Create a virtual screen:
-						screen -dmS <session name> <command>
-					Connect to it:
-						screen -r <session name>
-				*/
-
-				if vagrantCommand == "ssh" {
-					c := exec.Command("vagrant", "ssh", currentMachine.machineID)
-					if currentMachine.provider == "docker" {
-						c = exec.Command("vagrant", "docker-exec", currentMachine.name, "-it", "--", "/bin/sh")
-						c.Dir = currentMachine.home
-					}
-					runCommand := tea.ExecProcess(c, func(err error) tea.Msg {
-						if err != nil {
-							return runErrMsg(err.Error())
-						}
-						return nil
-					})
-					return v, runCommand
-				} else {
-					// Run the command async and stream result back
-					runCommand := v.createMachineRunCmd(
-						vagrantCommand,
-						currentMachine.machineID,
-					)
+				if v.ecosystem.currentEnv().hasFocus {
+					vagrantCommand := supportedMachineCommands[v.ecosystem.currentEnv().selectedCommand]
+					runCommand := v.createEnvRunCmd(vagrantCommand, v.ecosystem.currentEnv().home)
 					v.spinner.show = true
 					// This must be sent for the spinner to spin
 					tickCmd := v.spinner.spinner.Tick
 					return v, tea.Batch(runCommand, tickCmd)
+				} else {
+					currentMachine, _ := v.ecosystem.currentMachine()
+					vagrantCommand := supportedMachineCommands[currentMachine.selectedCommand]
+					/*
+						TODO: This doesn't support running commands in a desktop-less environment that doesn't have an external terminal to put commands on. One approach is to use `screen` to create virtual screen.
+
+						Create a virtual screen:
+							screen -dmS <session name> <command>
+						Connect to it:
+							screen -r <session name>
+					*/
+
+					if vagrantCommand == "ssh" {
+						c := exec.Command("vagrant", "ssh", currentMachine.machineID)
+						if currentMachine.provider == "docker" {
+							c = exec.Command("vagrant", "docker-exec", currentMachine.name, "-it", "--", "/bin/sh")
+							c.Dir = currentMachine.home
+						}
+						runCommand := tea.ExecProcess(c, func(err error) tea.Msg {
+							if err != nil {
+								return runErrMsg(err.Error())
+							}
+							return nil
+						})
+						return v, runCommand
+					} else {
+						// Run the command async and stream result back
+						runCommand := v.createMachineRunCmd(
+							vagrantCommand,
+							currentMachine.machineID,
+						)
+						v.spinner.show = true
+						// This must be sent for the spinner to spin
+						tickCmd := v.spinner.spinner.Tick
+						return v, tea.Batch(runCommand, tickCmd)
+					}
 				}
 			}
 		case key.Matches(msg, v.keys.Help):

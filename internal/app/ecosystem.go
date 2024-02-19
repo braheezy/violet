@@ -145,7 +145,11 @@ func (e *Ecosystem) View() (result string) {
 	for i, env := range e.environments[start:end] {
 		// Figure out which "tab" is selected and stylize accordingly
 		var style lipgloss.Style
-		isFirst, _, isActive := i == 0, i == len(e.environments)-1, i == e.selectedEnv
+		idx := i
+		if e.envPager.pg.Page > 0 {
+			idx = i + e.envPager.pg.PerPage
+		}
+		isFirst, _, isActive := idx == start, idx == len(e.environments)-1, idx == e.selectedEnv
 		if isActive && !e.envPager.moreIsSelected {
 			style = activeTabStyle.Copy()
 		} else {
