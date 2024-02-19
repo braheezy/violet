@@ -126,64 +126,62 @@ func (e *Ecosystem) View() (result string) {
 	// wrap in "tabs"
 	machineCards := []string{}
 	selectedEnv := e.environments[e.selectedEnv]
-	for i, machine := range selectedEnv.machines {
-		// "Viewing" a machine will get it's specific info
-		machineView := machine.View()
-		commands := e.machineCommands.View(machine.selectedCommand, !selectedEnv.hasFocus)
-		cardInfo := lipgloss.JoinHorizontal(lipgloss.Center, machineView, commands)
-		if !selectedEnv.hasFocus && i == e.selectedMachine {
-			cardInfo = selectedCardStyle.Render(cardInfo)
-		} else {
-			cardInfo = defaultCardStyle.Render(cardInfo)
-		}
-		machineCards = append(machineCards, cardInfo)
-
-		// This card always exists and controls the top-level environment
-		envTitle := envCardTitleStyle.Render(selectedEnv.name)
-		envCommands := newEnvCommandButtons(supportedEnvCommands)
-		if selectedEnv.hasFocus {
-			envTitle = selectedEnvCardStyle.Render(selectedEnv.name)
-		}
-		envCard := lipgloss.JoinHorizontal(lipgloss.Center, envTitle, envCommands.View(selectedEnv.selectedCommand, selectedEnv.hasFocus))
-
-		tabContent := envCard + "\n" + strings.Join(machineCards, "\n")
-
-		// Now create the tab headers, one for each environment.
-		var tabs []string
-		for i, env := range e.environments {
-			// Figure out which "tab" is selected and stylize accordingly
-			var style lipgloss.Style
-			isFirst, _, isActive := i == 0, i == len(e.environments)-1, i == e.selectedEnv
-			if isActive {
-				style = activeTabStyle.Copy()
-			} else {
-				style = inactiveTabStyle.Copy()
-			}
-			border, _, _, _, _ := style.GetBorder()
-			// Override border edges for these edge cases
-			if isFirst && isActive {
-				border.BottomLeft = "│"
-			} else if isFirst && !isActive {
-				border.BottomLeft = "├"
-			}
-			style = style.Border(border)
-			tabs = append(tabs, zone.Mark(env.name, style.Render(env.name)))
-		}
-
-		tabHeader := lipgloss.JoinHorizontal(lipgloss.Top, tabs...)
-		// Create the window effect by creating a blank tab to fill the rest of the width.
-		gapWidth := lipgloss.Width(tabContent) - lipgloss.Width(tabHeader)
-		if gapWidth < 0 {
-			// There's more tabs than the standard width of a tab, so add padding
-			tabContent = lipgloss.NewStyle().MarginRight(gapWidth * -1).Render(tabContent)
-			gapWidth = 0
-		}
-		gap := tabGapStyle.Render(strings.Repeat(" ", gapWidth))
-		tabHeader = lipgloss.JoinHorizontal(lipgloss.Top, tabHeader, gap)
-
-		result = lipgloss.JoinVertical(lipgloss.Center, tabHeader, tabWindowStyle.Render(tabContent))
-
+	selectedMachine := selectedEnv.machines[e.selectedMachine]
+	// "Viewing" a machine will get it's specific info
+	machineView := selectedMachine.View()
+	commands := e.machineCommands.View(selectedMachine.selectedCommand, !selectedEnv.hasFocus)
+	cardInfo := lipgloss.JoinHorizontal(lipgloss.Center, machineView, commands)
+	if !selectedEnv.hasFocus {
+		cardInfo = selectedCardStyle.Render(cardInfo)
 	}
+
+	machineCards = append(machineCards, cardInfo)
+
+	// This card always exists and controls the top-level environment
+	envTitle := envCardTitleStyle.Render(selectedEnv.name)
+	envCommands := newEnvCommandButtons(supportedEnvCommands)
+	if selectedEnv.hasFocus {
+		envTitle = selectedEnvCardStyle.Render(selectedEnv.name)
+	}
+	envCard := lipgloss.JoinHorizontal(lipgloss.Center, envTitle, envCommands.View(selectedEnv.selectedCommand, selectedEnv.hasFocus))
+
+	tabContent := envCard + "\n" + strings.Join(machineCards, "\n")
+
+	// Now create the tab headers, one for each environment.
+	var tabs []string
+	for i, env := range e.environments {
+		// Figure out which "tab" is selected and stylize accordingly
+		var style lipgloss.Style
+		isFirst, _, isActive := i == 0, i == len(e.environments)-1, i == e.selectedEnv
+		if isActive {
+			style = activeTabStyle.Copy()
+		} else {
+			style = inactiveTabStyle.Copy()
+		}
+		border, _, _, _, _ := style.GetBorder()
+		// Override border edges for these edge cases
+		if isFirst && isActive {
+			border.BottomLeft = "│"
+		} else if isFirst && !isActive {
+			border.BottomLeft = "├"
+		}
+		style = style.Border(border)
+		tabs = append(tabs, zone.Mark(env.name, style.Render(env.name)))
+	}
+
+	tabHeader := lipgloss.JoinHorizontal(lipgloss.Top, tabs...)
+	// Create the window effect by creating a blank tab to fill the rest of the width.
+	gapWidth := lipgloss.Width(tabContent) - lipgloss.Width(tabHeader)
+	if gapWidth < 0 {
+		// There's more tabs than the standard width of a tab, so add padding
+		tabContent = lipgloss.NewStyle().MarginRight(gapWidth * -1).Render(tabContent)
+		gapWidth = 0
+	}
+	gap := tabGapStyle.Render(strings.Repeat(" ", gapWidth))
+	tabHeader = lipgloss.JoinHorizontal(lipgloss.Top, tabHeader, gap)
+
+	result = lipgloss.JoinVertical(lipgloss.Center, tabHeader, tabWindowStyle.Render(tabContent))
+
 	return result
 }
 
