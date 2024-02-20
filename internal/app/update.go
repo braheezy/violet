@@ -15,7 +15,7 @@ type helpKeyMap struct {
 	Down          key.Binding
 	Left          key.Binding
 	Right         key.Binding
-	Switch        key.Binding
+	Tab           key.Binding
 	ShiftTab      key.Binding
 	Execute       key.Binding
 	SelectCommand key.Binding
@@ -44,9 +44,9 @@ var keys = helpKeyMap{
 	Right: key.NewBinding(
 		key.WithKeys("right", "l"),
 	),
-	Switch: key.NewBinding(
-		key.WithKeys("tab", "shift+tab"),
-		key.WithHelp("⭾/⇧+⭾", "env tab"),
+	Tab: key.NewBinding(
+		key.WithKeys("tab"),
+		key.WithHelp("⭾/⇧+⭾", "switch env tab"),
 	),
 	ShiftTab: key.NewBinding(
 		key.WithKeys("shift+tab"),
@@ -83,8 +83,8 @@ func (k helpKeyMap) ShortHelp() []key.Binding {
 // key.Map interface.
 func (k helpKeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
-		{k.SelectMachine, k.SelectCommand, k.Switch}, // first column
-		{k.Space, k.Execute, k.Help, k.Quit},         // second column
+		{k.SelectMachine, k.SelectCommand, k.Tab}, // first column
+		{k.Space, k.Execute, k.Help, k.Quit},      // second column
 	}
 }
 
@@ -185,66 +185,123 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			} else {
 				v.ecosystem.selectedMachine += 1
 			}
-		case key.Matches(msg, v.keys.Switch):
-			if v.ecosystem.selectedEnv == len(v.ecosystem.environments)-1 {
-				v.ecosystem.selectedEnv = 0
+		case key.Matches(msg, v.keys.Tab):
+			start, end := v.ecosystem.envPager.pg.GetSliceBounds(len(v.ecosystem.environments))
+			if v.ecosystem.envPager.moreIsSelected {
+				if v.ecosystem.envPager.pg.Page > 0 {
+					// There's a Back button to worry about
+					v.ecosystem.envPager.backIsSelected = true
+					v.ecosystem.selectedEnv = -1
+				} else {
+					// Wrap around to start of tabs
+					v.ecosystem.selectedEnv = start
+					v.ecosystem.envPager.moreIsSelected = false
+				}
+			} else if v.ecosystem.envPager.backIsSelected {
+				v.ecosystem.selectedEnv = start
+				v.ecosystem.envPager.backIsSelected = false
 			} else {
 				v.ecosystem.selectedEnv += 1
+				if v.ecosystem.selectedEnv == end && v.ecosystem.envPager.hasMultiplePages() && v.ecosystem.envPager.pg.OnLastPage() {
+					// At the end, no More tab, so wrap around to Back tab
+					v.ecosystem.selectedEnv = -1
+					v.ecosystem.envPager.backIsSelected = true
+				} else if v.ecosystem.selectedEnv == len(v.ecosystem.environments[start:end]) && v.ecosystem.envPager.hasMultiplePages() {
+					// User selected the More tab
+					v.ecosystem.envPager.moreIsSelected = true
+					v.ecosystem.selectedEnv = -1
+				}
 			}
 			return v, nil
 		case key.Matches(msg, v.keys.ShiftTab):
-			if v.ecosystem.selectedEnv == 0 {
-				v.ecosystem.selectedEnv = len(v.ecosystem.environments) - 1
+			start, end := v.ecosystem.envPager.pg.GetSliceBounds(len(v.ecosystem.environments))
+			if v.ecosystem.selectedEnv == start {
+				if v.ecosystem.envPager.hasMultiplePages() {
+					if v.ecosystem.envPager.pg.Page > 0 {
+						// User selected the Back tab
+						v.ecosystem.envPager.backIsSelected = true
+						v.ecosystem.selectedEnv = -1
+					} else {
+						// User has wrapped around and selected the More tab
+						v.ecosystem.envPager.moreIsSelected = true
+						v.ecosystem.selectedEnv = -1
+					}
+				} else if v.ecosystem.envPager.backIsSelected {
+					// User has wrapped around and selected the More tab
+					v.ecosystem.envPager.moreIsSelected = true
+					v.ecosystem.selectedEnv = -1
+				} else {
+					v.ecosystem.selectedEnv = end
+				}
 			} else {
-				v.ecosystem.selectedEnv -= 1
+				if v.ecosystem.envPager.moreIsSelected {
+					v.ecosystem.envPager.moreIsSelected = false
+					v.ecosystem.selectedEnv = end - 1
+				} else {
+					v.ecosystem.selectedEnv -= 1
+				}
 			}
 			return v, nil
 		case key.Matches(msg, v.keys.Space):
 			v.ecosystem.currentEnv().hasFocus = !v.ecosystem.currentEnv().hasFocus
 			return v, nil
 		case key.Matches(msg, v.keys.Execute):
-			if v.ecosystem.currentEnv().hasFocus {
-				vagrantCommand := supportedMachineCommands[v.ecosystem.currentEnv().selectedCommand]
-				runCommand := v.createEnvRunCmd(vagrantCommand, v.ecosystem.currentEnv().home)
-				v.spinner.show = true
-				// This must be sent for the spinner to spin
-				tickCmd := v.spinner.spinner.Tick
-				return v, tea.Batch(runCommand, tickCmd)
+			if v.ecosystem.envPager.moreIsSelected {
+				// User wants to see new env page
+				v.ecosystem.envPager.pg.NextPage()
+				start, _ := v.ecosystem.envPager.pg.GetSliceBounds(len(v.ecosystem.environments))
+				v.ecosystem.selectedEnv = start
+				v.ecosystem.envPager.moreIsSelected = false
+			} else if v.ecosystem.envPager.backIsSelected {
+				// User wants to go back to the previous env page
+				v.ecosystem.envPager.pg.PrevPage()
+				_, end := v.ecosystem.envPager.pg.GetSliceBounds(len(v.ecosystem.environments))
+				v.ecosystem.selectedEnv = end - 1
+				v.ecosystem.envPager.backIsSelected = false
 			} else {
-				currentMachine, _ := v.ecosystem.currentMachine()
-				vagrantCommand := supportedMachineCommands[currentMachine.selectedCommand]
-				/*
-					TODO: This doesn't support running commands in a desktop-less environment that doesn't have an external terminal to put commands on. One approach is to use `screen` to create virtual screen.
-
-					Create a virtual screen:
-						screen -dmS <session name> <command>
-					Connect to it:
-						screen -r <session name>
-				*/
-
-				if vagrantCommand == "ssh" {
-					c := exec.Command("vagrant", "ssh", currentMachine.machineID)
-					if currentMachine.provider == "docker" {
-						c = exec.Command("vagrant", "docker-exec", currentMachine.name, "-it", "--", "/bin/sh")
-						c.Dir = currentMachine.home
-					}
-					runCommand := tea.ExecProcess(c, func(err error) tea.Msg {
-						if err != nil {
-							return runErrMsg(err.Error())
-						}
-						return nil
-					})
-					return v, runCommand
-				} else {
-					// Run the command async and stream result back
-					runCommand := v.createMachineRunCmd(
-						vagrantCommand,
-						currentMachine.machineID,
-					)
+				if v.ecosystem.currentEnv().hasFocus {
+					vagrantCommand := supportedMachineCommands[v.ecosystem.currentEnv().selectedCommand]
+					runCommand := v.createEnvRunCmd(vagrantCommand, v.ecosystem.currentEnv().home)
 					v.spinner.show = true
 					// This must be sent for the spinner to spin
 					tickCmd := v.spinner.spinner.Tick
 					return v, tea.Batch(runCommand, tickCmd)
+				} else {
+					currentMachine, _ := v.ecosystem.currentMachine()
+					vagrantCommand := supportedMachineCommands[currentMachine.selectedCommand]
+					/*
+						TODO: This doesn't support running commands in a desktop-less environment that doesn't have an external terminal to put commands on. One approach is to use `screen` to create virtual screen.
+
+						Create a virtual screen:
+							screen -dmS <session name> <command>
+						Connect to it:
+							screen -r <session name>
+					*/
+
+					if vagrantCommand == "ssh" {
+						c := exec.Command("vagrant", "ssh", currentMachine.machineID)
+						if currentMachine.provider == "docker" {
+							c = exec.Command("vagrant", "docker-exec", currentMachine.name, "-it", "--", "/bin/sh")
+							c.Dir = currentMachine.home
+						}
+						runCommand := tea.ExecProcess(c, func(err error) tea.Msg {
+							if err != nil {
+								return runErrMsg(err.Error())
+							}
+							return nil
+						})
+						return v, runCommand
+					} else {
+						// Run the command async and stream result back
+						runCommand := v.createMachineRunCmd(
+							vagrantCommand,
+							currentMachine.machineID,
+						)
+						v.spinner.show = true
+						// This must be sent for the spinner to spin
+						tickCmd := v.spinner.spinner.Tick
+						return v, tea.Batch(runCommand, tickCmd)
+					}
 				}
 			}
 		case key.Matches(msg, v.keys.Help):

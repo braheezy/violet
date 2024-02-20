@@ -43,6 +43,23 @@ The `Makefile` contains the most common developer actions to perform. See `make 
 
 Using the `Vagrantfile`, a Libvirt VM can be created and inside that, scripts from `test/` can create quick dummy Vagrant projects. This can be a safe sandbox environment to experiment with builds of `violet`.
 
+```bash
+# Bring VM up and SSH in
+vagrant up && vagrant ssh
+# Get into the working directory
+cd /vagrant
+# Setup test environments
+bash test/multi_env.sh
+# Make edits, then run
+make run
+```
+
+| Test Script | Purpose |
+| --- | --- |
+| `single_env.sh` | Create one env with one machine
+| `multi_env.sh` | Create one env with multiple machines
+| `many_env.sh` | Create multiple envs, each with one machine
+
 ## Acknowledgements
 
 * [bubbletea](https://github.com/charmbracelet/bubbletea) - Main TUI framework
