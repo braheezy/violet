@@ -37,6 +37,7 @@ func (e ecosystemErrMsg) Error() string { return e.err.Error() }
 type environmentPager struct {
 	pg             paginator.Model
 	moreIsSelected bool
+	backIsSelected bool
 }
 
 func (ep *environmentPager) hasMultiplePages() bool {
@@ -150,18 +151,21 @@ func (e *Ecosystem) View() (result string) {
 			idx = i + e.envPager.pg.PerPage
 		}
 		isFirst, _, isActive := idx == start, idx == len(e.environments)-1, idx == e.selectedEnv
-		if isActive && !e.envPager.moreIsSelected {
+		if isActive {
 			style = activeTabStyle.Copy()
 		} else {
 			style = inactiveTabStyle.Copy()
 		}
 		border, _, _, _, _ := style.GetBorder()
 		// Override border edges for these edge cases
-		if isFirst && isActive {
-			border.BottomLeft = "│"
-		} else if isFirst && !isActive {
-			border.BottomLeft = "├"
+		if e.envPager.pg.Page == 0 {
+			if isFirst && isActive {
+				border.BottomLeft = "│"
+			} else if isFirst && !isActive {
+				border.BottomLeft = "├"
+			}
 		}
+
 		style = style.Border(border)
 		tabs = append(tabs, zone.Mark(env.name, style.Render(env.name)))
 	}
@@ -170,20 +174,42 @@ func (e *Ecosystem) View() (result string) {
 
 	// If there's paged environments, show a tab with a paged indicator
 	if e.envPager.hasMultiplePages() {
-		var style lipgloss.Style
-		if e.envPager.moreIsSelected {
-			style = activeTabStyle.Copy()
-		} else {
-			style = inactiveTabStyle.Copy()
+		// Show a More button if there's additional pages
+		var moreTab string
+		var backTab string
+		if e.envPager.pg.Page < e.envPager.pg.TotalPages-1 {
+			moreTab = zone.Mark("more", "⮕ ")
+			if e.envPager.moreIsSelected {
+				moreTab = activeTabStyle.Render(moreTab)
+			} else {
+				moreTab = inactiveTabStyle.Render(moreTab)
+			}
+			tabs = append(tabs, moreTab)
 		}
-		tabs = append(tabs, zone.Mark("more", style.Render("➔ ")))
+		// Show a Back button if there's previous pages
+		if e.envPager.pg.Page > 0 {
+			backTab = zone.Mark("back", "⬅ ")
+			if e.envPager.backIsSelected {
+				border, _, _, _, _ := activeTabStyle.GetBorder()
+				border.BottomLeft = "│"
+				style := activeTabStyle.Copy().Border(border)
+				backTab = style.Render(backTab)
+			} else {
+				border, _, _, _, _ := inactiveTabStyle.GetBorder()
+				border.BottomLeft = "├"
+				style := inactiveTabStyle.Copy().Border(border)
+				backTab = style.Render(backTab)
+			}
+			tabs = append([]string{backTab}, tabs...)
+		}
 	}
 
 	if e.envPager.moreIsSelected {
 		// Show More tab content
-		tabContent = "There's more stuff ova there ->"
+		tabContent = "There's more stuff ova there ->\nHit ENTER"
+	} else if e.envPager.backIsSelected {
+		tabContent = "<- There's stuff bak there\nHit ENTER"
 	} else {
-
 		// machineCards will be the set of machines to show for the selected env.
 		// They are dealt with first so we know the size of content we need to
 		// wrap in "tabs"
