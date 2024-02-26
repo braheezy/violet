@@ -215,16 +215,18 @@ func (e *Ecosystem) View() (result string) {
 		// wrap in "tabs"
 		machineCards := []string{}
 		selectedEnv := e.environments[e.selectedEnv]
-		selectedMachine := selectedEnv.machines[e.selectedMachine]
-		// "Viewing" a machine will get it's specific info
-		machineView := selectedMachine.View()
-		commands := e.machineCommands.View(selectedMachine.selectedCommand, !selectedEnv.hasFocus)
-		cardInfo := lipgloss.JoinHorizontal(lipgloss.Center, machineView, commands)
-		if !selectedEnv.hasFocus {
-			cardInfo = selectedCardStyle.Render(cardInfo)
+		for i, machine := range selectedEnv.machines {
+			// "Viewing" a machine will get it's specific info
+			machineView := machine.View()
+			commands := e.machineCommands.View(machine.selectedCommand, !selectedEnv.hasFocus)
+			cardInfo := lipgloss.JoinHorizontal(lipgloss.Center, machineView, commands)
+			if !selectedEnv.hasFocus && i == e.selectedMachine {
+				cardInfo = selectedCardStyle.Render(cardInfo)
+			} else {
+				cardInfo = defaultCardStyle.Render(cardInfo)
+			}
+			machineCards = append(machineCards, cardInfo)
 		}
-
-		machineCards = append(machineCards, cardInfo)
 
 		// This card always exists and controls the top-level environment
 		envTitle := envCardTitleStyle.Render(selectedEnv.name)

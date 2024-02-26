@@ -11,6 +11,7 @@ alias vr='vagrant reload'
 alias vssh='vagrant ssh'
 alias vs='vagrant status'
 alias vu='vagrant up'
+alias vnuke='vagrant global-status --prune | awk '\''/docker/{print $1}'\'' | xargs -r vagrant destroy -f'
 
 export PATH=$PATH:$HOME/go/bin/
 
@@ -33,5 +34,5 @@ rebuild() {
     popd &>/dev/null || exit
 }
 
-alias single="bash /vagarnt/test/single_env.sh"
-alias multi="bash /vagarnt/test/multi_env.sh"
+alias single="bash /vagrant/test/single_env.sh"
+alias multi="bash /vagrant/test/multi_env.sh"
