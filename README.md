@@ -65,6 +65,7 @@ make run
 * [bubbletea](https://github.com/charmbracelet/bubbletea) - Main TUI framework
 * [lipgloss](https://github.com/charmbracelet/lipgloss) - Styling and colors
 * [bubbletint](https://github.com/lrstanley/bubbletint) - Pre-made lipgloss colors
+* [bubblezone](https://github.com/lrstanley/bubblezone) - Rich mouse tracking
 
 ## Contributing
 
