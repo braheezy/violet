@@ -135,6 +135,70 @@ func (e *Ecosystem) currentEnv() *Environment {
 	return &e.environments[e.selectedEnv]
 }
 
+func (e *Ecosystem) incrementEnv() {
+	start, end := e.envPager.pg.GetSliceBounds(len(e.environments))
+	if e.envPager.moreIsSelected {
+		if e.envPager.pg.Page > 0 {
+			// There's a Back button to worry about
+			e.envPager.backIsSelected = true
+			e.selectedEnv = -1
+		} else {
+			// Wrap around to start of tabs
+			e.selectedEnv = start
+			e.envPager.moreIsSelected = false
+		}
+	} else if e.envPager.backIsSelected {
+		e.selectedEnv = start
+		e.envPager.backIsSelected = false
+	} else {
+		if e.selectedEnv == end-1 && e.envPager.hasMultiplePages() && e.envPager.pg.OnLastPage() {
+			// At the end, no More tab, so wrap around to Back tab
+			e.selectedEnv = -1
+			e.envPager.backIsSelected = true
+		} else if e.selectedEnv == len(e.environments[start:end])-1 && e.envPager.hasMultiplePages() {
+			// User selected the More tab
+			e.envPager.moreIsSelected = true
+			e.selectedEnv = -1
+		} else {
+			if e.selectedEnv == end-1 {
+				e.selectedEnv = 0
+			} else {
+				e.selectedEnv += 1
+			}
+		}
+	}
+}
+
+func (e *Ecosystem) decrementEnv() {
+	start, end := e.envPager.pg.GetSliceBounds(len(e.environments))
+	if e.selectedEnv == start {
+		if e.envPager.hasMultiplePages() {
+			if e.envPager.pg.Page > 0 {
+				// User selected the Back tab
+				e.envPager.backIsSelected = true
+				e.selectedEnv = -1
+			} else {
+				// User has wrapped around and selected the More tab
+				e.envPager.moreIsSelected = true
+				e.selectedEnv = -1
+			}
+		} else if e.envPager.backIsSelected {
+			// User has wrapped around and selected the More tab
+			e.envPager.moreIsSelected = true
+			e.selectedEnv = -1
+		} else {
+			e.selectedEnv = end - 1
+		}
+	} else {
+		if e.envPager.moreIsSelected {
+			e.envPager.moreIsSelected = false
+			e.selectedEnv = end - 1
+		} else {
+			e.selectedEnv -= 1
+		}
+	}
+}
+
 func (e *Ecosystem) View() (result string) {
 	if e.environments == nil {
 		return lipgloss.NewStyle().Foreground(textColor).Italic(true).Faint(true).Render("Still looking for environments...")

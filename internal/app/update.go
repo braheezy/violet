@@ -186,61 +186,10 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				v.ecosystem.selectedMachine += 1
 			}
 		case key.Matches(msg, v.keys.Tab):
-			start, end := v.ecosystem.envPager.pg.GetSliceBounds(len(v.ecosystem.environments))
-			if v.ecosystem.envPager.moreIsSelected {
-				if v.ecosystem.envPager.pg.Page > 0 {
-					// There's a Back button to worry about
-					v.ecosystem.envPager.backIsSelected = true
-					v.ecosystem.selectedEnv = -1
-				} else {
-					// Wrap around to start of tabs
-					v.ecosystem.selectedEnv = start
-					v.ecosystem.envPager.moreIsSelected = false
-				}
-			} else if v.ecosystem.envPager.backIsSelected {
-				v.ecosystem.selectedEnv = start
-				v.ecosystem.envPager.backIsSelected = false
-			} else {
-				v.ecosystem.selectedEnv += 1
-				if v.ecosystem.selectedEnv == end && v.ecosystem.envPager.hasMultiplePages() && v.ecosystem.envPager.pg.OnLastPage() {
-					// At the end, no More tab, so wrap around to Back tab
-					v.ecosystem.selectedEnv = -1
-					v.ecosystem.envPager.backIsSelected = true
-				} else if v.ecosystem.selectedEnv == len(v.ecosystem.environments[start:end]) && v.ecosystem.envPager.hasMultiplePages() {
-					// User selected the More tab
-					v.ecosystem.envPager.moreIsSelected = true
-					v.ecosystem.selectedEnv = -1
-				}
-			}
+			v.ecosystem.incrementEnv()
 			return v, nil
 		case key.Matches(msg, v.keys.ShiftTab):
-			start, end := v.ecosystem.envPager.pg.GetSliceBounds(len(v.ecosystem.environments))
-			if v.ecosystem.selectedEnv == start {
-				if v.ecosystem.envPager.hasMultiplePages() {
-					if v.ecosystem.envPager.pg.Page > 0 {
-						// User selected the Back tab
-						v.ecosystem.envPager.backIsSelected = true
-						v.ecosystem.selectedEnv = -1
-					} else {
-						// User has wrapped around and selected the More tab
-						v.ecosystem.envPager.moreIsSelected = true
-						v.ecosystem.selectedEnv = -1
-					}
-				} else if v.ecosystem.envPager.backIsSelected {
-					// User has wrapped around and selected the More tab
-					v.ecosystem.envPager.moreIsSelected = true
-					v.ecosystem.selectedEnv = -1
-				} else {
-					v.ecosystem.selectedEnv = end
-				}
-			} else {
-				if v.ecosystem.envPager.moreIsSelected {
-					v.ecosystem.envPager.moreIsSelected = false
-					v.ecosystem.selectedEnv = end - 1
-				} else {
-					v.ecosystem.selectedEnv -= 1
-				}
-			}
+			v.ecosystem.decrementEnv()
 			return v, nil
 		case key.Matches(msg, v.keys.Space):
 			v.ecosystem.currentEnv().hasFocus = !v.ecosystem.currentEnv().hasFocus
