@@ -201,15 +201,20 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				v.ecosystem.selectedEnv = start
 				v.ecosystem.envPager.backIsSelected = false
 			} else {
-				v.ecosystem.selectedEnv += 1
-				if v.ecosystem.selectedEnv == end && v.ecosystem.envPager.hasMultiplePages() && v.ecosystem.envPager.pg.OnLastPage() {
+				if v.ecosystem.selectedEnv == end-1 && v.ecosystem.envPager.hasMultiplePages() && v.ecosystem.envPager.pg.OnLastPage() {
 					// At the end, no More tab, so wrap around to Back tab
 					v.ecosystem.selectedEnv = -1
 					v.ecosystem.envPager.backIsSelected = true
-				} else if v.ecosystem.selectedEnv == len(v.ecosystem.environments[start:end]) && v.ecosystem.envPager.hasMultiplePages() {
+				} else if v.ecosystem.selectedEnv == len(v.ecosystem.environments[start:end])-1 && v.ecosystem.envPager.hasMultiplePages() {
 					// User selected the More tab
 					v.ecosystem.envPager.moreIsSelected = true
 					v.ecosystem.selectedEnv = -1
+				} else {
+					if v.ecosystem.selectedEnv == end-1 {
+						v.ecosystem.selectedEnv = 0
+					} else {
+						v.ecosystem.selectedEnv += 1
+					}
 				}
 			}
 			return v, nil
@@ -231,7 +236,7 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					v.ecosystem.envPager.moreIsSelected = true
 					v.ecosystem.selectedEnv = -1
 				} else {
-					v.ecosystem.selectedEnv = end
+					v.ecosystem.selectedEnv = end - 1
 				}
 			} else {
 				if v.ecosystem.envPager.moreIsSelected {
