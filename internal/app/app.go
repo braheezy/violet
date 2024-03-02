@@ -40,6 +40,7 @@ func Run() {
 	zone.NewGlobal()
 
 	p := tea.NewProgram(newViolet(), tea.WithAltScreen(), tea.WithMouseAllMotion())
+	p.SetWindowTitle("♡♡ violet ♡♡")
 	if _, err := p.Run(); err != nil {
 		log.Fatalf("Could not start program :(\n%v\n", err)
 	}
@@ -87,10 +88,8 @@ func newViolet() Violet {
 }
 
 func (v Violet) Init() tea.Cmd {
-	return tea.Batch(
-		getInitialGlobalStatus,
-		tea.SetWindowTitle("♡♡ violet ♡♡"),
-	)
+	return getInitialGlobalStatus
+
 }
 
 // Runs on boot to get current Vagrant status on host.
