@@ -182,16 +182,16 @@ func (e *Ecosystem) decrementEnv() {
 				e.envPager.moreIsSelected = true
 				e.selectedEnv = -1
 			}
-		} else if e.envPager.backIsSelected {
-			// User has wrapped around and selected the More tab
-			e.envPager.moreIsSelected = true
-			e.selectedEnv = -1
 		} else {
 			e.selectedEnv = end - 1
 		}
 	} else {
 		if e.envPager.moreIsSelected {
 			e.envPager.moreIsSelected = false
+			e.selectedEnv = end - 1
+		} else if e.envPager.backIsSelected {
+			// Wrap around to end of env tabs (there is no More tab)
+			e.envPager.backIsSelected = false
 			e.selectedEnv = end - 1
 		} else {
 			e.selectedEnv -= 1

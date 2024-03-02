@@ -113,12 +113,23 @@ func (v Violet) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	// User moved the mouse
 	case tea.MouseMsg:
-		if msg.Type == tea.MouseRelease {
-			// Iterate over environment names
-			for i, env := range v.ecosystem.environments {
-				if zone.Get(env.name).InBounds(msg) {
-					v.ecosystem.selectedEnv = i
-					break
+		if tea.MouseEvent(msg).Action == tea.MouseActionRelease {
+			// Check if clicked More or Back tab
+			if zone.Get("more").InBounds(msg) {
+				v.ecosystem.envPager.moreIsSelected = true
+				v.ecosystem.selectedEnv = -1
+			} else if zone.Get("back").InBounds(msg) {
+				v.ecosystem.envPager.backIsSelected = true
+				v.ecosystem.selectedEnv = -1
+			} else {
+				// Iterate over environment names
+				for i, env := range v.ecosystem.environments {
+					if zone.Get(env.name).InBounds(msg) {
+						v.ecosystem.selectedEnv = i
+						v.ecosystem.envPager.moreIsSelected = false
+						v.ecosystem.envPager.backIsSelected = false
+						break
+					}
 				}
 			}
 		}
