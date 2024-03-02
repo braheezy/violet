@@ -87,7 +87,10 @@ func newViolet() Violet {
 }
 
 func (v Violet) Init() tea.Cmd {
-	return getInitialGlobalStatus
+	return tea.Batch(
+		getInitialGlobalStatus,
+		tea.SetWindowTitle("♡♡ violet ♡♡"),
+	)
 }
 
 // Runs on boot to get current Vagrant status on host.
