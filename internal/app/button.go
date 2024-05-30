@@ -8,7 +8,7 @@ var (
 	defaultLargeButtonStyle = lipgloss.NewStyle().
 				Foreground(primaryColor).
 				Padding(1)
-	activeLargeButtonStyle = defaultLargeButtonStyle.Copy().
+	activeLargeButtonStyle = defaultLargeButtonStyle.
 				Foreground(secondaryColor).
 				Bold(true)
 	buttonLargeGroupStyle = lipgloss.NewStyle().
@@ -19,7 +19,7 @@ var (
 	defaultSmallButtonStyle = lipgloss.NewStyle().
 				Foreground(primaryColor).
 				Margin(0, 1)
-	activeSmallButtonStyle = defaultSmallButtonStyle.Copy().
+	activeSmallButtonStyle = defaultSmallButtonStyle.
 				Foreground(secondaryColor).
 				Bold(true)
 	buttonSmallGroupStyle = lipgloss.NewStyle().
@@ -61,9 +61,9 @@ func newMachineCommandButtons(supportedVagrantCommands []string) machineCommandB
 func (bg *machineCommandButtons) View(selectedCommand int, hasFocus bool) string {
 	for i := range bg.buttons {
 		if i == selectedCommand && hasFocus {
-			bg.buttons[i].style = activeSmallButtonStyle.Copy().Padding(0)
+			bg.buttons[i].style = activeSmallButtonStyle.Padding(0)
 		} else {
-			bg.buttons[i].style = defaultSmallButtonStyle.Copy().Padding(0)
+			bg.buttons[i].style = defaultSmallButtonStyle.Padding(0)
 		}
 	}
 

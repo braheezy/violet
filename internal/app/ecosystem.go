@@ -216,9 +216,9 @@ func (e *Ecosystem) View() (result string) {
 		}
 		isFirst, _, isActive := idx == start, idx == len(e.environments)-1, idx == e.selectedEnv
 		if isActive {
-			style = activeTabStyle.Copy()
+			style = activeTabStyle
 		} else {
-			style = inactiveTabStyle.Copy()
+			style = inactiveTabStyle
 		}
 		border, _, _, _, _ := style.GetBorder()
 		// Override border edges for these edge cases
@@ -256,12 +256,12 @@ func (e *Ecosystem) View() (result string) {
 			if e.envPager.backIsSelected {
 				border, _, _, _, _ := activeTabStyle.GetBorder()
 				border.BottomLeft = "│"
-				style := activeTabStyle.Copy().Border(border)
+				style := activeTabStyle.Border(border)
 				backTab = style.Render(backTab)
 			} else {
 				border, _, _, _, _ := inactiveTabStyle.GetBorder()
 				border.BottomLeft = "├"
-				style := inactiveTabStyle.Copy().Border(border)
+				style := inactiveTabStyle.Border(border)
 				backTab = style.Render(backTab)
 			}
 			tabs = append([]string{backTab}, tabs...)

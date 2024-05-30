@@ -24,7 +24,7 @@ var (
 	spinnerStyle = lipgloss.NewStyle().
 			Foreground(secondaryColor).
 			Italic(true)
-	spinnerCommandStyle = spinnerStyle.Copy().
+	spinnerCommandStyle = spinnerStyle.
 				Bold(true).
 				Foreground(secondaryColor)
 )
