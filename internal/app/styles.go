@@ -47,10 +47,10 @@ var (
 				BorderForeground(highlightColor).
 				Padding(0, 1).
 				Foreground(textColor)
-	activeTabStyle = inactiveTabStyle.Copy().
+	activeTabStyle = inactiveTabStyle.
 			Border(activeTabBorder, true).
 			Foreground(secondaryColor)
-	tabGapStyle = inactiveTabStyle.Copy().
+	tabGapStyle = inactiveTabStyle.
 			Border(gapBorder)
 	tabWindowStyle = lipgloss.NewStyle().
 			BorderForeground(highlightColor).
@@ -96,16 +96,16 @@ var (
 	defaultCardStyle = lipgloss.NewStyle().
 				Border(lipgloss.RoundedBorder(), false, false, false, false).
 				PaddingLeft(2)
-	selectedCardStyle = defaultCardStyle.Copy().
+	selectedCardStyle = defaultCardStyle.
 				BorderLeft(true).
 				Border(lipgloss.RoundedBorder(), false, false, false, true).
 				BorderForeground(secondaryColor).
 				PaddingLeft(1)
 
-	envCardTitleStyle = cardTitleStyle.Copy().
+	envCardTitleStyle = cardTitleStyle.
 				MarginLeft(1).
 				Width(textWrap)
-	selectedEnvCardStyle = envCardTitleStyle.Copy().
+	selectedEnvCardStyle = envCardTitleStyle.
 				Bold(true).
 				Foreground(secondaryColor)
 )
