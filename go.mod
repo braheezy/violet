@@ -3,7 +3,7 @@ module github.com/braheezy/violet
 go 1.19
 
 require (
-	github.com/charmbracelet/bubbles v0.19.0
+	github.com/charmbracelet/bubbles v0.20.0
 	github.com/charmbracelet/bubbletea v1.1.1
 	github.com/charmbracelet/lipgloss v0.13.0
 	github.com/lrstanley/bubbletint v0.0.0-20240817020431-87120507c312
