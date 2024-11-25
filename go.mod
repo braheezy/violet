@@ -8,7 +8,7 @@ require (
 	github.com/charmbracelet/lipgloss v0.13.0
 	github.com/lrstanley/bubbletint v0.0.0-20240817020431-87120507c312
 	github.com/lrstanley/bubblezone v0.0.0-20240820044643-3964e2111228
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 )
 
 require (
